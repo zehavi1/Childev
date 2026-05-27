@@ -141,7 +141,10 @@
   <ItemGroup>
     <ClCompile Include="buildAutomat.cpp" />
     <ClCompile Include="Compiler.cpp" />
-    <ClCompile Include="LexicalAnalysis.cpp" />
+    <ClCompile Include="enums.cpp" />
+    <ClCompile Include="ErrorHandler.cpp" />
+    <ClCompile Include="LexicalAnalysis2.cpp" />
+    <ClCompile Include="LexicalAnalyzer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SyntaxAnalysis.cpp" />
   </ItemGroup>
@@ -149,8 +152,10 @@
     <ClInclude Include="ASTNode.h" />
     <ClInclude Include="buildAutomat.h" />
     <ClInclude Include="enums.h" />
+    <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="Lexema.h" />
     <ClInclude Include="LexicalAnalysis.h" />
+    <ClInclude Include="LexicalAnalyzer.h" />
     <ClInclude Include="SyntaxAnalysis.h" />
   </ItemGroup>
   <ItemGroup>

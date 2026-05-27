@@ -36,17 +36,18 @@ public:
 		cout << "TokenNode: " << token.lex << endl;
 	}
 	string printOriginalCode(int tabs) const override {
-		string s(tabs, ' ');
-		if (token.typeToken == TOK_SEMICOLON)
-			return token.lex + "\n" + s;
-		else if (token.typeToken == TOK_OPEN_CURLY)
-			return "\n" + s + token.lex+ "\n" + s + " ";
-		else if (token.typeToken == TOK_CLOSE_CURLY)
-			return  s + token.lex + "\n" + s;
-		else if (mapAlphaTokens.find(token.lex) != mapAlphaTokens.end())
-			return token.lex + " ";
-		else
-			return token.lex;
+		//string s(tabs, ' ');
+		//if (token.typeToken == Tok_newline)
+		//	return token.lex + "\n" + s;
+		////else if (token.typeToken == TOK_OPEN_CURLY)
+		////	return "\n" + s + token.lex+ "\n" + s + " ";
+		////else if (token.typeToken == TOK_CLOSE_CURLY)
+		////	return  s + token.lex + "\n" + s;
+		////else if (mapAlphaTokens.find(token.lex) != mapAlphaTokens.end())
+		//	return token.lex + " ";
+		//else
+		//	return token.lex;
+		return "aa";
 	}
 	void changeChild(shared_ptr<ASTNode> child, int index) override {};
 };
