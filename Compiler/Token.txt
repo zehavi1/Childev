@@ -1,0 +1,23 @@
+1 Tok_identifier
+2 Tok_else
+3 Tok_false
+4 Tok_for
+5 Tok_if
+6 Tok_read
+7 Tok_to
+8 Tok_true
+9 Tok_write
+10 Tok_while
+11 Tok_num
+12 Tok_char
+13 Tok_string
+14 Tok_math
+15 Tok_comp
+16 Tok_eq// שווה
+17 Tok_log
+18 Tok_end
+19 Tok_Right_paren//(
+20 Tok_Left_paren//)
+21 Tok_comma//,
+22 Tok_Colon//:
+23 Tok_coment//הערה
