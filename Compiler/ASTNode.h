@@ -8,7 +8,7 @@
 #include "enums.h"
 using namespace std;
 // מחלקת בסיס לכל הצמתים
-struct Lexema
+struct Lexema 
 {
 	enum Token typeToken;
 	string lex;
