@@ -3,9 +3,10 @@
 
 #include <iostream>
 
-int main()
+int main_comp()
 {
     std::cout << "Hello World!\n";
+    return 0;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

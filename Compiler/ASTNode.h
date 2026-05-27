@@ -1,19 +1,14 @@
 #pragma once
-#pragma once
 #include <string>
 #include <vector>
 #include <list>
 #include <memory>
 #include <iostream>
 #include "enums.h"
+#include "Lexema.h"
 using namespace std;
 // מחלקת בסיס לכל הצמתים
-struct Lexema 
-{
-	enum Token typeToken;
-	string lex;
-	Lexema* nextlex;
-};
+
 struct ASTNode {
 public:
 	ASTNodeType nodeType = ASTNODE;

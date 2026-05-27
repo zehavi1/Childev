@@ -3,15 +3,13 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include "buildAutomat.h"   
+#include "buildAutomat.h" 
+#include "Lexema.h"
+#include "enums.h"
+#include <cctype>
 using namespace std;
 
-struct Lexema
-{
-	int numToken;
-	string lex;
-	Lexema* nextlex;
-};
+
 
 struct expression
 {
@@ -22,6 +20,8 @@ struct expression
 
 class LexicalAnalysis
 {
+private:
+	Token getTokenType(const string& lex);
 
 public:
 

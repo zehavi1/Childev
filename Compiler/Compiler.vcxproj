@@ -139,13 +139,26 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="buildAutomat.cpp" />
     <ClCompile Include="Compiler.cpp" />
+    <ClCompile Include="LexicalAnalysis.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="SyntaxAnalysis.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ASTNode.h" />
+    <ClInclude Include="buildAutomat.h" />
     <ClInclude Include="enums.h" />
+    <ClInclude Include="Lexema.h" />
+    <ClInclude Include="LexicalAnalysis.h" />
     <ClInclude Include="SyntaxAnalysis.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="accept_states_token.txt" />
+    <Text Include="compilerTxtData.txt" />
+    <Text Include="compilerTxtData2.txt" />
+    <Text Include="states.txt" />
+    <Text Include="Token.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

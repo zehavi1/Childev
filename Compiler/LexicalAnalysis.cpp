@@ -2,6 +2,7 @@
 #include "buildAutomat.h"
 
 
+
 LexicalAnalysis::LexicalAnalysis()
 {
 	
@@ -26,7 +27,7 @@ Lexema* LexicalAnalysis::TokenLex(string lex, buildAutomat* root_b)
 
 	Lexema* node = new Lexema();
 	node->lex = lex;
-	node->numToken = current->numToken;
+	node->typeToken = getTokenType(lex);
 	node->nextlex = nullptr;
 	return node;
 }
@@ -231,12 +232,122 @@ Lexema** LexicalAnalysis::getListLexema(string code,buildAutomat* root_b)
 
 			}
 		}
+		// אם נשארה לקסמה אחרונה לפני ; או סוף שורה
+		if (!lexema_from_code.empty())
+		{
+			Lexema* l1 = TokenLex(lexema_from_code, root_b);
+
+			if (l1 != nullptr)
+			{
+				l1->nextlex = nullptr;
+
+				if (lineHead == nullptr)
+					lineHead = lineTail = l1;
+				else
+				{
+					lineTail->nextlex = l1;
+					lineTail = l1;
+				}
+			}
+
+			lexema_from_code = "";
+		}
+
+		// אם השורה הסתיימה ב-; נוסיף אותו כטוקן בפני עצמו
+		if (x < code.length() && code[x] == ';')
+		{
+			Lexema* endLex = TokenLex(";", root_b);
+
+			if (endLex != nullptr)
+			{
+				endLex->nextlex = nullptr;
+
+				if (lineHead == nullptr)
+					lineHead = lineTail = endLex;
+				else
+				{
+					lineTail->nextlex = endLex;
+					lineTail = endLex;
+				}
+			}
+
+			x++; // מדלגים על ;
+		}
+		else if (x < code.length() && code[x] == '\n')
+		{
+			x++; // מדלגים על ירידת שורה
+		}
+
+		// שומרים את הרשימה של השורה
 		list_lexema[lineIndex] = lineHead;
 		lineIndex++;
-		x++;
 								
 		//אם אתה לא מרשימת המפרידים
 	}
 	return list_lexema;
 	
+}
+Token LexicalAnalysis::getTokenType(const string& lex)
+{
+	if (lex == "else")  return Tok_else;
+	if (lex == "false") return Tok_false;
+	if (lex == "for")   return Tok_for;
+	if (lex == "if")    return Tok_if;
+	if (lex == "read")  return Tok_read;
+	if (lex == "to")    return Tok_to;
+	if (lex == "true")  return Tok_true;
+	if (lex == "write") return Tok_write;
+	if (lex == "while") return Tok_while;
+
+	if (lex == "+" || lex == "-" || lex == "*" || lex == "/" || lex == "%")
+		return Tok_math;
+
+	if (lex == "==" || lex == "!=" || lex == ">" || lex == "<" || lex == ">=" || lex == "<=")
+		return Tok_comp;
+
+	if (lex == "=")
+		return Tok_eq;
+
+	if (lex == "&&" || lex == "||")
+		return Tok_log;
+
+	if (lex == ";")
+		return Tok_end;
+
+	if (lex == "(")
+		return Tok_Left_paren;
+
+	if (lex == ")")
+		return Tok_Right_paren;
+
+	if (lex == ",")
+		return Tok_comma;
+
+	if (lex == ":")
+		return Tok_Colon;
+
+	if (lex.length() >= 2 && lex[0] == '"' && lex[lex.length() - 1] == '"')
+		return Tok_string;
+
+	if (lex.length() >= 3 && lex[0] == '\'' && lex[lex.length() - 1] == '\'')
+		return Tok_char;
+
+	bool isNumber = true;
+
+	if (lex.empty())
+		return Tok_error;
+
+	for (char c : lex)
+	{
+		if (!isdigit((unsigned char)c))
+		{
+			isNumber = false;
+			break;
+		}
+	}
+
+	if (isNumber)
+		return Tok_num;
+
+	return Tok_identifier;
 }

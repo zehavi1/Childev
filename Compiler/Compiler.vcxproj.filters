@@ -21,6 +21,15 @@
     <ClCompile Include="SyntaxAnalysis.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="buildAutomat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LexicalAnalysis.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SyntaxAnalysis.h">
@@ -32,5 +41,21 @@
     <ClInclude Include="ASTNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="buildAutomat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LexicalAnalysis.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Lexema.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="accept_states_token.txt" />
+    <Text Include="compilerTxtData.txt" />
+    <Text Include="compilerTxtData2.txt" />
+    <Text Include="states.txt" />
+    <Text Include="Token.txt" />
   </ItemGroup>
 </Project>

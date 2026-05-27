@@ -33,6 +33,7 @@ enum Token {
 	Tok_comma,//,
 	Tok_Colon,//:
 	Tok_coment,//הערה
+	Tok_error
 };
 
 enum Pattern {
