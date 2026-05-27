@@ -1,154 +1,271 @@
 #pragma once
+
 #include <string>
 #include <vector>
-#include <list>
 #include <memory>
 #include <iostream>
+#include <stdexcept>
 #include "enums.h"
 #include "Lexema.h"
-using namespace std;
-// מחלקת בסיס לכל הצמתים
 
+using namespace std;
+
+// מחלקת בסיס לכל הצמתים בעץ התחבירי
 struct ASTNode {
 public:
-	ASTNodeType nodeType = ASTNODE;
-	virtual void printASTNode(int depth = 0) = 0;
-	virtual ~ASTNode() {}
-	virtual string printOriginalCode(int tabs) const = 0;
-	virtual void changeChild(shared_ptr<ASTNode> child, int index) = 0;
-
+    virtual void printASTNode(int depth = 0) = 0;
+    virtual string printOriginalCode(int tabs = 0) const = 0;
+    virtual void changeChild(shared_ptr<ASTNode> child, int index) = 0;
+    virtual ~ASTNode() {}
 };
-void printTabsDepth(int depth) {
-	for (int i = 0; i < depth; ++i) {
-		cout << "  ";
-	}
+
+// חשוב שיהיה inline כי זו פונקציה שמוגדרת בתוך h
+inline void printTabsDepth(int depth) {
+    for (int i = 0; i < depth; ++i) {
+        cout << "  ";
+    }
 }
-struct TokenNode :ASTNode {
-public:
-	Lexema token;
-	TokenNode() {}
-	/*TokenNode(Variable v) {
-		token = v.token;
-	}*/
-	TokenNode(const Lexema& token, ASTNodeType nodeType = ASTNODE) :token(token) { this->nodeType = nodeType; }
-	void printASTNode(int depth = 0) {
-		printTabsDepth(depth);
-		cout << "TokenNode: " << token.lex << endl;
-	}
-	string printOriginalCode(int tabs) const override {
-		//string s(tabs, ' ');
-		//if (token.typeToken == Tok_newline)
-		//	return token.lex + "\n" + s;
-		////else if (token.typeToken == TOK_OPEN_CURLY)
-		////	return "\n" + s + token.lex+ "\n" + s + " ";
-		////else if (token.typeToken == TOK_CLOSE_CURLY)
-		////	return  s + token.lex + "\n" + s;
-		////else if (mapAlphaTokens.find(token.lex) != mapAlphaTokens.end())
-		//	return token.lex + " ";
-		//else
-		//	return token.lex;
-		return "aa";
-	}
-	void changeChild(shared_ptr<ASTNode> child, int index) override {};
-};
-struct ParentNode :ASTNode {
-public:
-	string name;
-	vector<shared_ptr<ASTNode>> children;
-	//map<string, Variable> variableScope;
-	ParentNode(const string& name, vector<shared_ptr<ASTNode>> children, ASTNodeType nodeType = ASTNODE) :name(name), children(children) { this->nodeType = nodeType; }
-	ParentNode(const string& name, ASTNodeType nodeType = ASTNODE) :name(name) { this->nodeType = nodeType; }
-public:
-	void printASTNode(int depth = 0) {
-		printTabsDepth(depth);
-		cout << "ParentNode: " << ASTNodeTypeNames[nodeType] << endl;
-		for (auto child : children) {
-			child->printASTNode(depth + 1);
-		}
-	}
-	string printOriginalCode(int tabs) const override {
-		string s = "";
-		if (name == "block")
-			tabs++;
-		for (const auto& child : children) {
-			s += child->printOriginalCode(tabs);
-		}
-		return s;
-	}
-	void addChild(shared_ptr<ASTNode> child) {
-		children.push_back(child);
-	}
-	void changeChild(shared_ptr<ASTNode> child, int index)
-	{
-		children[index] = child;
-	}
-	void insertChild(shared_ptr<ASTNode> child, size_t index) {
-		// בדוק אם האינדקס בתווך החוקי
-		if (index <= children.size()) {
-			// הוסף את הילד לאינדקס i
-			children.insert(children.begin() + index, child);
-		}
-		else {
-			throw out_of_range("Index is out of range");
-		}
-	}
 
+// צומת שמייצג טוקן בודד
+struct TokenNode : ASTNode {
+public:
+    Lexema token;
+
+    TokenNode() {  }
+
+    TokenNode(const Lexema& token) : token(token) {}
+
+    void printASTNode(int depth = 0) override {
+        printTabsDepth(depth);
+        cout << "TokenNode: " << token.lex << endl;
+    }
+
+    string printOriginalCode(int tabs = 0) const override {
+        string spaces(tabs, ' ');
+
+        switch (token.typeToken)
+        {
+        case Tok_newline:
+            return "\n" + spaces;
+
+        case Tok_semicolon:
+            return ";\n" + spaces;
+
+        case Tok_Colon:
+            return " :\n" + spaces;
+
+        case Tok_block_end:
+            return "\n" + spaces + "||\n" + spaces;
+
+        case Tok_if:
+        case Tok_else:
+        case Tok_for:
+        case Tok_while:
+        case Tok_read:
+        case Tok_write:
+        case Tok_to:
+        case Tok_true:
+        case Tok_false:
+            return token.lex + " ";
+
+        case Tok_comma:
+            return ", ";
+
+        case Tok_Left_paren:
+            return "(";
+
+        case Tok_Right_paren:
+            return ")";
+
+        default:
+            return token.lex;
+        }
+    }
+
+    void changeChild(shared_ptr<ASTNode> child, int index) override {
+        // אין ילדים ל־TokenNode
+    }
 };
 
-// צומת עבור ביטויים בינאריים
+// צומת אב כללי שמחזיק רשימת ילדים
+struct ParentNode : ASTNode {
+public:
+    string name;
+    vector<shared_ptr<ASTNode>> children;
+
+    ParentNode(const string& name)
+        : name(name) {
+    }
+
+    ParentNode(const string& name, vector<shared_ptr<ASTNode>> children)
+        : name(name), children(children) {
+    }
+
+    void printASTNode(int depth = 0) override {
+        printTabsDepth(depth);
+        cout << "ParentNode: " << name << endl;
+
+        for (auto child : children) {
+            if (child != nullptr)
+                child->printASTNode(depth + 1);
+        }
+    }
+
+    string printOriginalCode(int tabs = 0) const override {
+        string result = "";
+
+        int currentTabs = tabs;
+
+        if (name == "block")
+            currentTabs++;
+
+        for (const auto& child : children) {
+            if (child != nullptr)
+                result += child->printOriginalCode(currentTabs);
+        }
+
+        return result;
+    }
+
+    void addChild(shared_ptr<ASTNode> child) {
+        children.push_back(child);
+    }
+
+    void changeChild(shared_ptr<ASTNode> child, int index) override {
+        if (index < 0 || index >= children.size()) {
+            throw out_of_range("Index is out of range");
+        }
+
+        children[index] = child;
+    }
+
+    void insertChild(shared_ptr<ASTNode> child, size_t index) {
+        if (index <= children.size()) {
+            children.insert(children.begin() + index, child);
+        }
+        else {
+            throw out_of_range("Index is out of range");
+        }
+    }
+};
+
+// צומת עבור ביטוי בינארי: x + y, x > y, a & b וכו'
 struct BinaryOpNode : ASTNode {
 public:
-	string name = "BinaryOpNode";
-	Lexema op;
-	shared_ptr<ASTNode> left;
-	shared_ptr<ASTNode> right;
-	BinaryOpNode(const Lexema& op, shared_ptr<ASTNode> left, shared_ptr<ASTNode> right, ASTNodeType nodeType = ASTNODE)
-		: op(op), left(left), right(right) {
-		this->nodeType = nodeType;
-	}
-	BinaryOpNode(string name, const Lexema& op, shared_ptr<ASTNode> left, shared_ptr<ASTNode> right, ASTNodeType nodeType = ASTNODE)
-		:name(name), op(op), left(left), right(right) {
-		this->nodeType = nodeType;
-	}
-	string printOriginalCode(int tabs) const override {
-		string s;
-		s = left->printOriginalCode(tabs);
-		s += op.lex;
-		s += right->printOriginalCode(tabs);
-		return s;
-	}
-	void printASTNode(int depth = 0) {
-		printTabsDepth(depth + 1);
-		cout << ASTNodeTypeNames[nodeType] << endl;
-		printTabsDepth(depth + 1);
-		cout << "Left: " << endl;
-		left->printASTNode(depth + 1);
-		printTabsDepth(depth);
-		cout << "BinaryOpNode: " << op.lex << endl;
-		printTabsDepth(depth + 1);
-		cout << "Right: " << endl;
-		right->printASTNode(depth + 1);
-	}
-	void changeChild(shared_ptr<ASTNode> child, int index)
-	{
-		if (index == 0)
-			left = child;
-		else
-			right = child;
-	}
-};
-struct SentenceNode :ASTNode
-{
-	string content;
-	SentenceNode(string content, ASTNodeType nodeType = ASTNODE) :content(content) { this->nodeType = nodeType; };
-	void printASTNode(int depth = 0) {
-		printTabsDepth(depth);
-		cout << "SentenceNode: " << content << endl;
-	}
-	string printOriginalCode(int tabs) const override {
-		string s(tabs, ' ');
-		return content;
-	}
-	void changeChild(shared_ptr<ASTNode> child, int index) override {};
+    string name = "BinaryOpNode";
+    Lexema op;
+    shared_ptr<ASTNode> left;
+    shared_ptr<ASTNode> right;
+
+    BinaryOpNode(const Lexema& op,
+        shared_ptr<ASTNode> left,
+        shared_ptr<ASTNode> right)
+        : op(op), left(left), right(right) {
+    }
+
+    BinaryOpNode(string name,
+        const Lexema& op,
+        shared_ptr<ASTNode> left,
+        shared_ptr<ASTNode> right)
+        : name(name), op(op), left(left), right(right) {
+    }
+
+    void printASTNode(int depth = 0) override {
+        printTabsDepth(depth);
+        cout << name << ": " << op.lex << endl;
+
+        printTabsDepth(depth + 1);
+        cout << "Left:" << endl;
+        if (left != nullptr)
+            left->printASTNode(depth + 2);
+
+        printTabsDepth(depth + 1);
+        cout << "Right:" << endl;
+        if (right != nullptr)
+            right->printASTNode(depth + 2);
+    }
+
+    string printOriginalCode(int tabs = 0) const override {
+        string result = "";
+
+        if (left != nullptr)
+            result += left->printOriginalCode(tabs);
+
+        result += " " + op.lex + " ";
+
+        if (right != nullptr)
+            result += right->printOriginalCode(tabs);
+
+        return result;
+    }
+
+    void changeChild(shared_ptr<ASTNode> child, int index) override {
+        if (index == 0)
+            left = child;
+        else if (index == 1)
+            right = child;
+        else
+            throw out_of_range("BinaryOpNode has only 2 children");
+    }
 };
 
+// צומת עבור ביטוי אונרי, למשל: -x
+struct UnaryOpNode : ASTNode {
+public:
+    string name = "UnaryOpNode";
+    Lexema op;
+    shared_ptr<ASTNode> expr;
+
+    UnaryOpNode(const Lexema& op,
+        shared_ptr<ASTNode> expr)
+        : op(op), expr(expr) {
+    }
+
+    void printASTNode(int depth = 0) override {
+        printTabsDepth(depth);
+        cout << name << ": " << op.lex << endl;
+
+        if (expr != nullptr)
+            expr->printASTNode(depth + 1);
+    }
+
+    string printOriginalCode(int tabs = 0) const override {
+        string result = op.lex;
+
+        if (expr != nullptr)
+            result += expr->printOriginalCode(tabs);
+
+        return result;
+    }
+
+    void changeChild(shared_ptr<ASTNode> child, int index) override {
+        if (index == 0)
+            expr = child;
+        else
+            throw out_of_range("UnaryOpNode has only 1 child");
+    }
+};
+
+// צומת פשוט לטקסט כללי / הודעות / תוכן מיוחד
+struct SentenceNode : ASTNode {
+public:
+    string content;
+
+    SentenceNode(string content)
+        : content(content) {
+    }
+
+    void printASTNode(int depth = 0) override {
+        printTabsDepth(depth);
+        cout << "SentenceNode: " << content << endl;
+    }
+
+    string printOriginalCode(int tabs = 0) const override {
+        string spaces(tabs, ' ');
+        return spaces + content;
+    }
+
+    void changeChild(shared_ptr<ASTNode> child, int index) override {
+        // אין ילדים
+    }
+};

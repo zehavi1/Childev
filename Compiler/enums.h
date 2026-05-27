@@ -41,6 +41,7 @@ enum Token {
 	Tok_newline,     // ירידת שורה
 	Tok_semicolon,   // ; אם כן כתבו
 	Tok_error,
+	Tok_EOF,
 	Tok_count
 };
 extern const char* TokenNames[Tok_count];

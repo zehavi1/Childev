@@ -1,118 +1,180 @@
 #pragma once
+
+#include <vector>
 #include <string>
+#include <memory>
 #include "enums.h"
-using namespace std;
 #include "ASTNode.h"
+#include "Lexema.h"
 
+using namespace std;
 
-class SyntaxAnalysis
+class SyntacticAnalysis
 {
 private:
-    Lexema** list;     // מערך של רשימות מקושרות
-    int listCount;     // מספר הרשימות
-    int i;             // אינדקס הרשימה הנוכחית
-    Lexema* lex;       // האיבר הנוכחי
-    void MoveToFirstNonEmptyList()
-    {
-        while (i < listCount && list[i] == nullptr)
-        {
-            i++;
-        }
-
-        if (i < listCount)
-            lex = list[i];
-        else
-            lex = nullptr;
-    }
+    vector<Lexema> tokens;          // רשימת הלקסמות
+    size_t currentTokenIndex = 0;   // איפה אנחנו נמצאים כרגע
 
 public:
-         
+    SyntacticAnalysis();
 
-    SyntaxAnalysis(Lexema** list, int listCount)
-    {
-        this->list = list;
-        this->listCount = listCount;
-        this->i = 0;
-        this->lex = nullptr;
+    SyntacticAnalysis(const vector<Lexema>& tokens);
 
-        MoveToFirstNonEmptyList();
-    }
+    // הפונקציה הראשית
+    shared_ptr<ASTNode> parse();
 
-    Lexema* Next()
-    {
-        // אם אין איבר נוכחי — אין לאן להתקדם
-        if (lex == nullptr)
-            return nullptr;
+    ~SyntacticAnalysis();
+    void printASTNodes(const shared_ptr<ASTNode>& node);
 
-        // אם יש איבר הבא באותה רשימה
-        if (lex->nextlex != nullptr)
-        {
-            lex = lex->nextlex;
-            return lex;
-        }
+private:
+    // =====================================================
+    // פעולות עזר כלליות
+    // =====================================================
 
-        // אחרת עוברים לרשימה הבאה
-        i++;
+    Lexema currentToken();
 
-        // מדלגים על רשימות ריקות
-        while (i < listCount && list[i] == nullptr)
-        {
-            i++;
-        }
+    Lexema peekNextToken();
 
-        // אם קיימת רשימה נוספת
-        if (i < listCount)
-            lex = list[i];
-        else
-            lex = nullptr;
+    void nextToken();
 
-        return lex;
-    }
+    bool isEnd();
 
-    Lexema* Current()
-    {
-        return lex;
-    }
+    bool isCurrent(Token token);
 
-    //shared_ptr<TokenNode> match(Pattern pattern, string msg = "UnExcepted");
-    //shared_ptr<ASTNode> expression();
-    //shared_ptr<ASTNode> term();
-    //shared_ptr<ASTNode> factor();
-    //shared_ptr<ASTNode> number();
-    //shared_ptr<ASTNode> type(); // ניתוח סוגי משתנים
+    bool isSeparator();
 
-    ////משתנים
-    //shared_ptr<ASTNode> declaration();
-    //shared_ptr<ASTNode> declaration1(bool canBeFunction = 1);
-    //shared_ptr<ASTNode> variable(Pattern typeVariable); // ניתוח משתנה
-    //shared_ptr<ASTNode> variable_list(Pattern typeVariable); // ניתוח מזהה
-    //shared_ptr<ASTNode> printf_statement();
-    ////משפטי השמה והדפסה
-    //shared_ptr<ASTNode> print_statement();
-    //shared_ptr<ASTNode> variable_declaration(); // ניתוח הצהרות משתנים
-    //shared_ptr<ASTNode> expr_print();
-    //shared_ptr<ASTNode> expressionInPrint();
-    //shared_ptr<ASTNode> assignment(); // ניתוח השמות
-    //shared_ptr<ASTNode> assignment1();
-    //shared_ptr<ASTNode> statement(); // ניתוח פקודות
-    ////פקודות if
-    //shared_ptr<ASTNode> if_else_statement(); // ניתוח פקודות if-else
-    //shared_ptr<ASTNode> elif_statement(); // ניתוח פקודות if-else-if
-    //Token peekNextToken();
-    ////תנאים חדש
-    //shared_ptr<ASTNode> exprOr();
-    //shared_ptr<ASTNode> exprAnd();
-    //shared_ptr<ASTNode> exprComparison();
-    //shared_ptr<ASTNode> exprArithmetic();
-    //shared_ptr<ASTNode> comparison_operator(); // ניתוח אופרטורים להשוואה
-    //shared_ptr<ASTNode> block(); // ניתוח בלוקים
+    bool isStatementStart();
 
-    ////לולאות
-    //shared_ptr<ASTNode> for_loop(); // ניתוח לולאות for
-    //shared_ptr<ASTNode> while_loop(); // ניתוח לולאות while
-    //shared_ptr<ASTNode> foreach_loop(); // ניתוח לולאות foreach
-    //shared_ptr<ASTNode> function_definition(shared_ptr<ParentNode> p = nullptr); // ניתוח הגדרות פונקציות
-    //shared_ptr<ASTNode> collection(); // ניתוח אוספים
-    //shared_ptr<ASTNode> parameter_list(); // ניתוח רשימת פרמטרים
+    string currentLex();
 
+    Token currentTokenType();
+
+    // התאמה לפי סוג טוקן
+    shared_ptr<TokenNode> match(Token token, string msg = "Unexpected token");
+
+    // התאמה עבור Tok_math עם בדיקת lex
+    shared_ptr<TokenNode> matchMath(const string& op, string msg = "Unexpected math operator");
+
+    // התאמה עבור Tok_comp
+    shared_ptr<TokenNode> matchComp(string msg = "Unexpected comparison operator");
+
+    bool isMathOp(const string& op);
+
+    bool isCompOp();
+
+    // =====================================================
+    // Separators
+    // =====================================================
+
+    // Separator ::= Tok_newline | Tok_semicolon | Tok_comment
+    shared_ptr<ASTNode> separator();
+
+    // Separators ::= Separator { Separator }
+    shared_ptr<ASTNode> separators();
+
+    // SeparatorsOpt ::= { Separator }
+    shared_ptr<ASTNode> separatorsOpt();
+
+    void skipSeparators();
+
+    // =====================================================
+    // Program
+    // =====================================================
+
+    // Program ::= SeparatorsOpt StatementList Tok_count
+    shared_ptr<ASTNode> program();
+
+    // StatementList ::= SeparatorsOpt [ Statement { Separators Statement } SeparatorsOpt ]
+    shared_ptr<ASTNode> statementList(Token stopToken);
+
+    // =====================================================
+    // Statements
+    // =====================================================
+
+    // Statement ::= Assignment
+    //             | ReadStatement
+    //             | WriteStatement
+    //             | IfStatement
+    //             | WhileStatement
+    //             | ForStatement
+    shared_ptr<ASTNode> statement();
+
+    // Assignment ::= IdentifierList Tok_assign Expression
+    shared_ptr<ASTNode> assignment();
+
+    // IdentifierList ::= Tok_identifier { Tok_comma Tok_identifier }
+    shared_ptr<ASTNode> identifierList();
+
+    // ReadStatement ::= Tok_read Tok_Left_paren ArgsOpt Tok_Right_paren
+    shared_ptr<ASTNode> readStatement();
+
+    // WriteStatement ::= Tok_write Tok_Left_paren ArgsOpt Tok_Right_paren
+    shared_ptr<ASTNode> writeStatement();
+
+    // IfStatement ::= Tok_if Expression Block ElsePartOpt
+    shared_ptr<ASTNode> ifStatement();
+
+    // ElsePartOpt ::= ε
+    //               | SeparatorsOpt Tok_else Block
+    shared_ptr<ASTNode> elsePartOpt();
+
+    // WhileStatement ::= Tok_while Expression Block
+    shared_ptr<ASTNode> whileStatement();
+
+    // ForStatement ::= Tok_for Tok_identifier Tok_assign Expression Tok_to Expression Block
+    //                | Tok_for Tok_Left_paren Tok_identifier Tok_assign Expression Tok_to Expression Tok_Right_paren Block
+    shared_ptr<ASTNode> forStatement();
+
+    // Block ::= Tok_Colon StatementList Tok_block_end
+    shared_ptr<ASTNode> block();
+
+    // =====================================================
+    // Arguments
+    // =====================================================
+
+    // ArgsOpt ::= ε | ExpressionList
+    shared_ptr<ASTNode> argsOpt();
+
+    // ExpressionList ::= Expression { Tok_comma Expression }
+    shared_ptr<ASTNode> expressionList();
+
+    // =====================================================
+    // Expressions
+    // =====================================================
+
+    // Expression ::= OrExpression
+    shared_ptr<ASTNode> expression();
+
+    // OrExpression ::= AndExpression { Tok_or AndExpression }
+    shared_ptr<ASTNode> exprOr();
+
+    // AndExpression ::= CompareExpression { Tok_and CompareExpression }
+    shared_ptr<ASTNode> exprAnd();
+
+    // CompareExpression ::= AddExpression [ Tok_comp AddExpression ]
+    shared_ptr<ASTNode> exprComparison();
+
+    // AddExpression ::= MulExpression { Tok_math("+") MulExpression
+    //                                 | Tok_math("-") MulExpression }
+    shared_ptr<ASTNode> exprAdd();
+
+    // MulExpression ::= PowerExpression { Tok_math("*") PowerExpression
+    //                                   | Tok_math("/") PowerExpression }
+    shared_ptr<ASTNode> exprMul();
+
+    // PowerExpression ::= UnaryExpression [ Tok_math("^") PowerExpression ]
+    shared_ptr<ASTNode> exprPower();
+
+    // UnaryExpression ::= Tok_math("-") UnaryExpression
+    //                   | Primary
+    shared_ptr<ASTNode> exprUnary();
+
+    // Primary ::= Tok_num
+    //           | Tok_string
+    //           | Tok_char
+    //           | Tok_true
+    //           | Tok_false
+    //           | Tok_identifier
+    //           | Tok_Left_paren Expression Tok_Right_paren
+    shared_ptr<ASTNode> primary();
 };
