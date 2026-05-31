@@ -6,6 +6,8 @@
 #include "enums.h"
 #include "ASTNode.h"
 #include "Lexema.h"
+#include "ErrorReporter.h"
+#include "ParseException.h"
 
 using namespace std;
 
@@ -14,11 +16,30 @@ class SyntacticAnalysis
 private:
     vector<Lexema> tokens;          // רשימת הלקסמות
     size_t currentTokenIndex = 0;   // איפה אנחנו נמצאים כרגע
+    shared_ptr<ErrorReporter> errorReporter;
+    void reportSyntaxError(const string& message);
+    void recoverToNextStatementOrStop(Token stopToken);
+    void failSyntax(const string& message);
+    //void reportSyntaxError(const string& message);
+    //void synchronize();
+    //void recoverAfterError();
+    //bool isExpressionBoundary();
+    //bool isExpressionStart();
+    //void recoverToNextStatementOrStop(Token stopToken);
+
+    //string expressionContextToMessage(ExpressionContext context);
+    //string currentLexForError();
+
+    //shared_ptr<ASTNode> makeErrorNode(const string& name, const string& message);
+
+    //shared_ptr<ASTNode> parseRequiredExpression(ExpressionContext context);
+    //void failSyntax(const string& message);
 
 public:
     SyntacticAnalysis();
 
     SyntacticAnalysis(const vector<Lexema>& tokens);
+    SyntacticAnalysis(const vector<Lexema>& tokens, shared_ptr<ErrorReporter> errorReporter);
 
     // הפונקציה הראשית
     shared_ptr<ASTNode> parse();
@@ -141,7 +162,7 @@ private:
     // =====================================================
     // Expressions
     // =====================================================
-
+    
     // Expression ::= OrExpression
     shared_ptr<ASTNode> expression();
 

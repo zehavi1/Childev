@@ -7,4 +7,5 @@ struct Lexema
 	Token typeToken;
 	string lex;
 	Lexema* nextlex;
+	int lineNumber = 1;
 };

@@ -39,8 +39,114 @@ vector<Lexema> convertLexemaListToVector(Lexema* head)
 
     return result;
 }
-
 int main()
+{
+    string code1 =
+        "x <- 5\n"
+        "y <- \n"
+        "write(\"after error\", x)\n"
+        "if x = 5 :\n"
+        "write(\"ok\")\n"
+        "||\n"
+        "for i <- 1 to :\n"
+        "write(i)\n"
+        "||\n";
+    string code =
+        "x <- 5\n"
+        "y <- \n"                              // חסר ביטוי אחרי השמה
+        "write(\"after first error\", x)\n"
+        "\n"
+
+        "write(\"missing close paren\", x\n"   // חסר )
+        "z <- 10\n"
+        "\n"
+
+        "if x = 5\n"                           // חסר :
+        "write(\"if without colon\")\n"
+        "||\n"
+        "\n"
+
+        "if :\n"                               // חסר תנאי אחרי if
+        "write(\"missing condition\")\n"
+        "||\n"
+        "\n"
+
+        "if x > 3 :\n"
+        "write(\"ok\")\n"
+        "else :\n"                             // חסר || לפני else
+        "write(\"bad else location\")\n"
+        "||\n"
+        "\n"
+
+        "while :\n"                            // חסר תנאי אחרי while
+        "x <- x + 1\n"
+        "||\n"
+        "\n"
+
+        "while x < 10 :\n"
+        "x <- x + \n"                          // חסר ביטוי אחרי +
+        "write(\"still inside while\", x)\n"
+        "||\n"
+        "\n"
+
+        "for i <- 1 to :\n"                    // חסר ערך סיום אחרי to
+        "write(i)\n"
+        "||\n"
+        "\n"
+
+        "for <- 1 to 10 :\n"                   // חסר משתנה אחרי for
+        "write(\"bad for\")\n"
+        "||\n"
+        "\n"
+
+        "for j <- to 10 :\n"                   // חסר ערך התחלה אחרי <-
+        "write(j)\n"
+        "||\n"
+        "\n"
+
+        "for (k <- 1 to 5 :\n"                 // חסר )
+        "write(k)\n"
+        "||\n"
+        "\n"
+
+        "write(\"a\", , x)\n"                  // חסר ביטוי אחרי פסיק
+        "write(, x)\n"                         // חסר ביטוי ראשון
+        "write(\"missing comma\" x)\n"         // חסר פסיק בין ארגומנטים
+        "\n"
+
+        "a b <- 7\n"                           // חסר מפריד / מבנה לא חוקי
+        "m <- 3 * \n"                          // חסר ביטוי אחרי *
+        "n <- (4 + 5\n"                        // חסר )
+        "p <- 2 ^ \n"                          // חסר ביטוי אחרי ^
+        "\n"
+
+        "||\n"                                 // סוף בלוק בלי פתיחת בלוק
+        "\n"
+
+        "q <- 9\n"
+        "write(\"finished\", q)\n";
+    LexicalAnalyzer lexicalAnalysis;
+
+    auto errorReporter = make_shared<ErrorReporter>();
+
+    Lexema* list = lexicalAnalysis.getLexemaList(code);
+
+    vector<Lexema> tokens = convertLexemaListToVector(list);
+
+    SyntacticAnalysis parser(tokens, errorReporter);
+
+    shared_ptr<ASTNode> ast = parser.parse();
+
+    cout << endl << "AST:" << endl;
+    parser.printASTNodes(ast);
+
+    errorReporter->printErrors();
+
+    LexicalAnalyzer::freeLexemaList(list);
+
+    return 0;
+}
+int main_check_syntatic()
 {
     try
     {
