@@ -21,11 +21,10 @@ struct CompilationError
 {
     ErrorKind kind;
     ErrorSeverity severity;
-
     string message;
     string lexeme;
-
     int lineNumber;
+
     int columnNumber;
 
     CompilationError(
@@ -56,7 +55,6 @@ inline string ErrorKindToString(ErrorKind kind)
         return "Syntax error";
     case ErrorKind::Semantic:
         return "Semantic error";
-   
     default:
         return "Unknown error";
     }
