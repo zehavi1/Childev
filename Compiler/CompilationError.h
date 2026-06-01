@@ -8,7 +8,6 @@ enum class ErrorKind
 {
     Lexical,
     Syntax,
-    Semantic
 };
 
 enum class ErrorSeverity
@@ -56,7 +55,6 @@ inline string ErrorKindToString(ErrorKind kind)
         return "Syntax error";
     case ErrorKind::Semantic:
         return "Semantic error";
-   
     default:
         return "Unknown error";
     }
