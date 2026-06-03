@@ -8,7 +8,13 @@ enum class ErrorKind
 {
     Lexical,
     Syntax,
+<<<<<<<<< Temporary merge branch 1
+    Semantic,
+    Runtime,
+    Internal
+=========
     Semantic
+>>>>>>>>> Temporary merge branch 2
 };
 
 enum class ErrorSeverity
