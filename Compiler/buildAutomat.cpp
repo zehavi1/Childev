@@ -35,7 +35,6 @@ buildAutomat::buildAutomat()
 	for (int i = 0; i < NumOfState; i++)
 	{
 		this->arrState[i].numToken = -1;
-		//קריאה מקובץ
 		for (int j = 0; j < Ascii; j++)
 		{
 			this->arrState[i].hashState[j] = NULL;
@@ -47,43 +46,30 @@ buildAutomat::buildAutomat()
 	{
 		cerr << "Cannot open file\n"; return;
 	}
-	//הודעת שגיאה	
-	string len1;
-	while (getline(file1, len1, '\r'))// /n בקובץ tu word שיעבור עד /r ולא עד /n
 
+
+	
+	int fromState, toState;
+	char inputChar;
+	while (file1 >> fromState >> inputChar >> toState)
 	{
+		if (fromState >= 0 && fromState < NumOfState &&
+			toState >= 0 && toState < NumOfState &&
+			(unsigned char)inputChar < Ascii)
+		{
+			this->arrState[fromState].hashState[(unsigned char)inputChar] =
+				&this->arrState[toState];
+		}
+		else
+			cerr << "שגיאה: ערך מחוץ לגבולות בקובץ states.txt\n";
+	
+	std::cout << fromState << '\n';
+    std::cout << inputChar << '\n';
+    std::cout << toState << '\n';
+	std::cout << "h333 file\n";
+	}	
 		
-		//string line = "1 A 3"
-		//השורה שנקראה מהקובץ;
-		stringstream ss(len1);
-		string word; int arrTxtState[3]; int i = 0;
-		
-		
-		
-			while (i < 3 && ss >> word)
-			{
-			std::cout << "WORD = [" << word << "]\n";
-			if (i == 0 || i == 2)
-				arrTxtState[i] = stoi(word);
-			else
-
-				arrTxtState[i] = word[0];
-			i++;
-			
-			}
-			// non-owning pointer: מצביע אל מצב קיים ב-arrState
-			this->arrState[arrTxtState[0]].hashState[arrTxtState[1]] = &this->arrState[arrTxtState[2]];
-			//*(this->arrState[arrTxtState[0]].hashState)[arrTxtState[1]] = (this->arrState[arrTxtState[2]]);
-			std::cout << &this->arrState[arrTxtState[2]] << '\n';
-			std::cout << this->arrState[arrTxtState[0]].hashState[arrTxtState[1]] << '\n';
-			std::cout << "h333 file\n";
-		
-		
-		
-
-		
-		//צריך לבדוק איך מגדירים על מקומות 0 ו 2 במערך איך עושים שייצגו את הערך המספרי של המספר ולא אסקי אף שמדובר במספר דו ספרתי
-	}
+	
 	file1.close();
 
 	std::cout << "file 1 end file\n";
@@ -94,31 +80,23 @@ buildAutomat::buildAutomat()
 		cerr << "Cannot open file\n"; return;
 	}//הודעת שגיאה
 
-
-	//הודעת שגיאה	
-	string len2;
 	std::cout << "start read file2\n";
 
-	while (getline(file2, len2,'\n'))
-
+	
+	int state, token;
+	while (file2 >> state >> token)
 	{
-		stringstream ss(len2);
-		string word; int arrTxtaccept_states_token[2]; int i = 0;
-		while (i<2 && ss >> word)
+		if (state >= 0 && state < NumOfState &&
+			token >= 0 && token <= NumOfToken)
 		{
-
-			arrTxtaccept_states_token[i] = stoi(word);
-			i++;
-
+			this->arrState[state].numToken = token;
 		}
-		
+		else
+			cerr << "שגיאה: ערך מחוץ לגבולות בקובץ accept_states_token.txt\n";
 
-		this->arrState[arrTxtaccept_states_token[0]].numToken = arrTxtaccept_states_token[1];
-		std::cout << arrTxtaccept_states_token[0] << '\n';
-		std::cout << arrTxtaccept_states_token[1] << '\n';
-
+		std::cout << state << '\n';
+		std::cout << token << '\n';
 	}
-
 	file2.close();
 	std::cout << "file 2 end file\n";
 
@@ -130,23 +108,30 @@ buildAutomat::buildAutomat()
 		cerr << "Cannot open file\n"; return;
 	} //הודעת שגיאה
 
-	string len3;
 	std::cout << "start read file2\n";
 
-	while (getline(file3, len3, '\n'))
+	
+	int tok;
+	while (file3 >> tok)
 	{
-		arrToken[stoi(len3)] = 1;
-		std::cout<< arrToken[stoi(len3)] << '\n';
+		if (tok >= 0 && tok <= NumOfToken)
+		{
+			arrToken[tok] = 1;
+		}
+		else
+			cerr << "שגיאה: ערך מחוץ לגבולות בקובץ compilerTxtData.txt\n";
 
+		std::cout << arrToken[tok] << '\n';
 	}
-
 	file3.close();
 
 	std::cout << "file 3 end file\n";
 
 	for (int i = 0; i < NumOfState; i++)
 	{
-		if (arrToken[this->arrState[i].numToken] == 1)
+		if (this->arrState[i].numToken >= 0 &&
+			this->arrState[i].numToken <= NumOfToken &&
+			arrToken[this->arrState[i].numToken] == 1)
 			for (int j = 0; j < Ascii; j++)
 			{
 				if (this->arrState[i].hashState[j] == NULL)
@@ -159,21 +144,6 @@ buildAutomat::buildAutomat()
 
 	std::cout << "automat success!!!!!!!!!!!!!!!!!!!!!!!\n";
 
-	//אתחול מצב 0
-
-
-
-	//קריאה מקובץ מצבים וכו
-
-
-
-	// בכל תא מגדירים מערך מסוג מצב בגודל כל התווים באסקי טבלת אש וכן מגדירים בתא מס טוקן במקרה של -1 הוא לא מקבל
-
-	// ממצב 0 כל התאים באש שהם אותיות מצביעים למצב 1
-
-	// מתחילים לקרו מהקובץ. אם קראתי תו ממצב 0 שהיה מצביע למצב 1 יש לדרוס אותו ולהפנות לפי הקובץ ובמצב החדש אליו מצביע להגדיר שמקבל טוקן של מצב 1
-
-	// כל מצב שייפתח חדש יש לאתחל את כל האש להצביע למצב 1 רק מי שמתאים לשם משתנה!
-
+	
 
 }

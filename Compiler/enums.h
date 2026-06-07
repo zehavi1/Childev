@@ -8,8 +8,8 @@
 //	string type;
 //	string value;
 //};
-enum Token {
-	Tok_identifier,
+enum TokenType {
+	Tok_identifier=1,
 
 	Tok_else,
 	Tok_false,
@@ -39,10 +39,11 @@ enum Token {
 	Tok_comment,     // { ... }
 
 	Tok_newline,     // ירידת שורה
-	Tok_semicolon,   // ; אם כן כתבו
+	
 	Tok_error,
 	Tok_EOF,
-	Tok_count
+	Tok_count,
+	Tok_semicolon,   // ; אם כן כתבו
 };
 extern const char* TokenNames[Tok_count];
 

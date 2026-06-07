@@ -7,16 +7,17 @@ SyntacticAnalysis::SyntacticAnalysis()
 {
 }
 
-SyntacticAnalysis::SyntacticAnalysis(const vector<Lexema>& tokens)
+SyntacticAnalysis::SyntacticAnalysis(const Token* tokens)
 	: tokens(tokens)
 {
+	this->current = this->tokens;
 }
 SyntacticAnalysis::SyntacticAnalysis(
-	const vector<Lexema>& tokens,
+	const Token* tokens,
 	shared_ptr<ErrorReporter> errorReporter
 )
 	: tokens(tokens),
-	errorReporter(errorReporter)
+	errorReporter(errorReporter),current(tokens)
 {
 }
 
@@ -24,54 +25,59 @@ SyntacticAnalysis::~SyntacticAnalysis()
 {
 }
 
-Lexema SyntacticAnalysis::currentToken()
+Token SyntacticAnalysis::currentToken()
 {
-	if (currentTokenIndex >= tokens.size())
+	//if (currentTokenIndex >= tokens.size())
+	if (current->nextlex == nullptr)
 	{
-		Lexema endToken;
-		endToken.typeToken = Tok_count;
+		Token endToken;
+		endToken.typeToken = Tok_EOF;
 		endToken.lex = "";
 		endToken.nextlex = nullptr;
 		return endToken;
 	}
-
-	return tokens[currentTokenIndex];
+	return *current;
+	//return tokens[currentTokenIndex];
 }
 
-Lexema SyntacticAnalysis::peekNextToken()
+Token SyntacticAnalysis::peekNextToken()
 {
-	if (currentTokenIndex + 1 >= tokens.size())
+	//if (currentTokenIndex + 1 >= tokens.size())
+	if(current->nextlex==nullptr)
 	{
-		Lexema endToken;
-		endToken.typeToken = Tok_count;
+		Token endToken;
+		endToken.typeToken = Tok_EOF;
 		endToken.lex = "";
 		endToken.nextlex = nullptr;
 		return endToken;
 	}
 
-	return tokens[currentTokenIndex + 1];
+	//return tokens[currentTokenIndex + 1];
+	return *(tokens->nextlex);
 }
 
 void SyntacticAnalysis::nextToken()
 {
-	if (currentTokenIndex < tokens.size())
+	//if (currentTokenIndex < tokens.size())
+	if(current->nextlex)
 	{
-		currentTokenIndex++;
+		current = current->nextlex;
 	}
 }
 
 bool SyntacticAnalysis::isEnd()
 {
-	return currentTokenIndex >= tokens.size()
-		|| currentToken().typeToken == Tok_count;
+	//return currentTokenIndex >= tokens.size()
+	return current->nextlex == nullptr
+		|| currentToken().typeToken == Tok_EOF;
 }
 
-bool SyntacticAnalysis::isCurrent(Token token)
+bool SyntacticAnalysis::isCurrent(TokenType token)
 {
 	return currentToken().typeToken == token;
 }
 
-Token SyntacticAnalysis::currentTokenType()
+TokenType SyntacticAnalysis::currentTokenType()
 {
 	return currentToken().typeToken;
 }
@@ -83,7 +89,7 @@ string SyntacticAnalysis::currentLex()
 
 bool SyntacticAnalysis::isSeparator()
 {
-	Token t = currentToken().typeToken;
+	TokenType t = currentToken().typeToken;
 
 	return t == Tok_newline
 		|| t == Tok_semicolon
@@ -118,7 +124,7 @@ bool SyntacticAnalysis::isCompOp()
 	return currentToken().typeToken == Tok_comp;
 }
 
-shared_ptr<TokenNode> SyntacticAnalysis::match(Token expected, string msg)
+shared_ptr<TokenNode> SyntacticAnalysis::match(TokenType expected, string msg)
 {
 	if (currentToken().typeToken != expected)
 	{
@@ -126,7 +132,7 @@ shared_ptr<TokenNode> SyntacticAnalysis::match(Token expected, string msg)
 		failSyntax(fullMsg);
 	}
 
-	Lexema t = currentToken();
+	Token t = currentToken();
 	nextToken();
 
 	return make_shared<TokenNode>(t);
@@ -148,7 +154,7 @@ shared_ptr<TokenNode> SyntacticAnalysis::matchMath(const string& op, string msg)
 		throw ParseException(message);
 	}
 
-	Lexema t = currentToken();
+	Token t = currentToken();
 	nextToken();
 
 	return make_shared<TokenNode>(t);
@@ -164,7 +170,7 @@ shared_ptr<TokenNode> SyntacticAnalysis::matchComp(string msg)
 		throw runtime_error(error);
 	}
 
-	Lexema t = currentToken();
+	Token t = currentToken();
 	nextToken();
 
 	return make_shared<TokenNode>(t);
@@ -188,11 +194,11 @@ shared_ptr<ASTNode> SyntacticAnalysis::program()
 
 	skipSeparators();
 
-	node->addChild(statementList(Tok_count));
+	node->addChild(statementList(Tok_EOF));
 
-	if (currentToken().typeToken == Tok_count)
+	if (currentToken().typeToken == Tok_EOF)
 	{
-		node->addChild(match(Tok_count));
+		node->addChild(match(Tok_EOF));
 	}
 
 	return node;
@@ -225,7 +231,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::program()
 //
 //    return node;
 //}
-shared_ptr<ASTNode> SyntacticAnalysis::statementList(Token stopToken)
+shared_ptr<ASTNode> SyntacticAnalysis::statementList(TokenType stopToken)
 {
 	auto node = make_shared<ParentNode>("statementList");
 
@@ -233,11 +239,11 @@ shared_ptr<ASTNode> SyntacticAnalysis::statementList(Token stopToken)
 
 	while (!isEnd())
 	{
-		Token t = currentToken().typeToken;
+		TokenType t = currentToken().typeToken;
 
 		// סוף הרשימה שהקורא ביקש.
 		// לא אוכלים אותו. הקורא יאכל.
-		if (t == stopToken || t == Tok_count)
+		if (t == stopToken || t == Tok_EOF)
 		{
 			break;
 		}
@@ -266,7 +272,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::statementList(Token stopToken)
 			}
 			else if (!isEnd() &&
 				currentToken().typeToken != stopToken &&
-				currentToken().typeToken != Tok_count)
+				currentToken().typeToken != Tok_EOF)
 			{
 				string msg = "Missing separator between statements";
 				failSyntax(msg);
@@ -586,7 +592,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::exprOr()
 
 	while (currentToken().typeToken == Tok_or)
 	{
-		Lexema op = currentToken();
+		Token op = currentToken();
 		nextToken();
 
 		shared_ptr<ASTNode> right = exprAnd();
@@ -603,7 +609,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::exprAnd()
 
 	while (currentToken().typeToken == Tok_and)
 	{
-		Lexema op = currentToken();
+		Token op = currentToken();
 		nextToken();
 
 		shared_ptr<ASTNode> right = exprComparison();
@@ -620,7 +626,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::exprComparison()
 
 	if (isCompOp())
 	{
-		Lexema op = currentToken();
+		Token op = currentToken();
 		nextToken();
 
 		shared_ptr<ASTNode> right = exprAdd();
@@ -637,7 +643,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::exprAdd()
 
 	while (isMathOp("+") || isMathOp("-"))
 	{
-		Lexema op = currentToken();
+		Token op = currentToken();
 		nextToken();
 
 		shared_ptr<ASTNode> right = exprMul();
@@ -654,7 +660,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::exprMul()
 
 	while (isMathOp("*") || isMathOp("/"))
 	{
-		Lexema op = currentToken();
+		Token op = currentToken();
 		nextToken();
 
 		shared_ptr<ASTNode> right = exprPower();
@@ -671,7 +677,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::exprPower()
 
 	if (isMathOp("^"))
 	{
-		Lexema op = currentToken();
+		Token op = currentToken();
 		nextToken();
 
 		shared_ptr<ASTNode> right = exprPower();
@@ -686,7 +692,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::exprUnary()
 {
 	if (isMathOp("-"))
 	{
-		Lexema op = currentToken();
+		Token op = currentToken();
 		nextToken();
 
 		shared_ptr<ASTNode> expr = exprUnary();
@@ -708,7 +714,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::primary()
 	case Tok_false:
 	case Tok_identifier:
 	{
-		Lexema t = currentToken();
+		Token t = currentToken();
 		nextToken();
 		return make_shared<TokenNode>(t);
 	}
@@ -740,7 +746,7 @@ void SyntacticAnalysis::printASTNodes(const shared_ptr<ASTNode>& node)
 }
 void SyntacticAnalysis::reportSyntaxError(const string& message)
 {
-	Lexema t = currentToken();
+	Token t = currentToken();
 
 	if (errorReporter != nullptr)
 	{
@@ -758,14 +764,14 @@ void SyntacticAnalysis::failSyntax(const string& message)
 	reportSyntaxError(message);
 	throw ParseException(message);
 }
-void SyntacticAnalysis::recoverToNextStatementOrStop(Token stopToken)
+void SyntacticAnalysis::recoverToNextStatementOrStop(TokenType stopToken)
 {
 	while (!isEnd())
 	{
-		Token t = currentToken().typeToken;
+		TokenType t = currentToken().typeToken;
 
 		// הגענו לסוף שהקורא מחכה לו — לא אוכלים.
-		if (t == stopToken || t == Tok_count)
+		if (t == stopToken || t == Tok_EOF)
 		{
 			return;
 		}

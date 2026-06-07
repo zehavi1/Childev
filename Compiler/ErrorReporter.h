@@ -93,4 +93,44 @@ public:
             cout << endl;
         }
     }
+        string sanitizeForOutput(string text) const
+        {
+            for (char& ch : text)
+            {
+                if (ch == '|')
+                    ch = '/';
+
+                if (ch == '\n' || ch == '\r' || ch == '\t')
+                    ch = ' ';
+            }
+
+            return text;
+        }
+        void printErrorsForClient() const
+        {
+            if (errors.empty())
+            {
+                cout << "OK" << endl;
+                return;
+            }
+
+            for (const CompilationError& e : errors)
+            {
+                cout << "ERROR|"
+                    << e.lineNumber << "|"
+                    << e.columnNumber << "|"
+                    << ErrorKindToString(e.kind) << "|"
+                    << sanitizeForOutput(e.message);
+
+                // אם תרצי להחזיר גם את הלקסמה הבעייתית:
+                if (!e.lexeme.empty())
+                {
+                    cout << "|";
+                    cout << sanitizeForOutput(e.lexeme);
+                }
+
+                cout << endl;
+            }
+        
+    }
 };

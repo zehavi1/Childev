@@ -1,15 +1,15 @@
 #pragma once
 #include <string>
-#include "Lexema.h"
+#include "Token.h"
 class LexicalAnalyzer
 {
 
     private:
-        static void addLexema(Lexema*& head, Lexema*& tail, Token type, const std::string& lex);
+        static void addLexema(Token*& head, Token*& tail, TokenType type, const std::string& lex);
 
         static std::string toLowerStr(const std::string& str);
 
-        static Token getKeywordOrIdentifier(const std::string& word);
+        static TokenType getKeywordOrIdentifier(const std::string& word);
 
         static bool isMathOperator(char c);
         
@@ -17,11 +17,11 @@ class LexicalAnalyzer
     public:
         LexicalAnalyzer() = default;
 
-        Lexema* getLexemaList(const std::string& code);
+        Token* getLexemaList(const std::string& code);
 
-        static void printLexemaList(Lexema* head);
+        static void printLexemaList(Token* head);
 
-        static void freeLexemaList(Lexema* head);
+        static void freeLexemaList(Token* head);
     };
 
 

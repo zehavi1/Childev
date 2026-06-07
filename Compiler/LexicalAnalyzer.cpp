@@ -2,9 +2,9 @@
 #include <iostream>
 #include <cctype>
 
-void LexicalAnalyzer::addLexema(Lexema*& head, Lexema*& tail, Token type, const std::string& lex)
+void LexicalAnalyzer::addLexema(Token*& head, Token*& tail, TokenType type, const std::string& lex)
 {
-    Lexema* node = new Lexema();
+    Token* node = new Token();
 
     node->typeToken = type;
     node->lex = lex;
@@ -34,7 +34,7 @@ std::string LexicalAnalyzer::toLowerStr(const std::string& str)
     return result;
 }
 
-Token LexicalAnalyzer::getKeywordOrIdentifier(const std::string& word)
+TokenType LexicalAnalyzer::getKeywordOrIdentifier(const std::string& word)
 {
     std::string lowerWord = toLowerStr(word);
 
@@ -73,10 +73,10 @@ bool LexicalAnalyzer::isMathOperator(char c)
     return c == '+' || c == '-' || c == '*' || c == '/' || c == '^';
 }
 
-Lexema* LexicalAnalyzer::getLexemaList(const std::string& code)
+Token* LexicalAnalyzer::getLexemaList(const std::string& code)
 {
-    Lexema* head = nullptr;
-    Lexema* tail = nullptr;
+    Token* head = nullptr;
+    Token* tail = nullptr;
 
     int i = 0;
     int length = static_cast<int>(code.length());
@@ -113,7 +113,7 @@ Lexema* LexicalAnalyzer::getLexemaList(const std::string& code)
             }
 
             std::string lowerWord = toLowerStr(word);
-            Token type = getKeywordOrIdentifier(lowerWord);
+            TokenType type = getKeywordOrIdentifier(lowerWord);
 
             // שומרים ב-lowercase כדי שלא יהיה הבדל בין X לבין x
             addLexema(head, tail, type, lowerWord);
@@ -375,31 +375,31 @@ Lexema* LexicalAnalyzer::getLexemaList(const std::string& code)
 
     return head;
 }
-const char* tokenToString(Token token)
+const char* tokenToString(TokenType token)
 {
     if (token < Tok_identifier || token > Tok_error)
         return "Unknown Token";
 
     return TokenNames[token];
 }
-void LexicalAnalyzer::printLexemaList(Lexema* head)
+void LexicalAnalyzer::printLexemaList(Token* head)
 {
-    Lexema* curr = head;
+    Token* curr = head;
 
     while (curr != nullptr)
     {
-        std::cout << "Token: " << tokenToString(curr->typeToken)
-            << " | Lexema: " << curr->lex << std::endl;
+        std::cout << "TokenType: " << tokenToString(curr->typeToken)
+            << " | Token: " << curr->lex << std::endl;
 
         curr = curr->nextlex;
     }
 }
 
-void LexicalAnalyzer::freeLexemaList(Lexema* head)
+void LexicalAnalyzer::freeLexemaList(Token* head)
 {
     while (head != nullptr)
     {
-        Lexema* temp = head;
+        Token* temp = head;
         head = head->nextlex;
         delete temp;
     }

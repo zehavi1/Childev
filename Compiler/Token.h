@@ -2,10 +2,10 @@
 #include <string>
 using namespace std;
 #include "enums.h"
-struct Lexema
+struct Token
 {
-	Token typeToken;
+	TokenType typeToken;
 	string lex;
-	Lexema* nextlex;
+	Token* nextlex;
 	int lineNumber = 1;
 };

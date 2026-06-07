@@ -11,13 +11,19 @@
 11 Tok_num
 12 Tok_char
 13 Tok_string
-14 Tok_math
-15 Tok_comp
-16 Tok_eq// שווה
-17 Tok_log
-18 Tok_end
-19 Tok_Right_paren//(
-20 Tok_Left_paren//)
-21 Tok_comma//,
-22 Tok_Colon//:
-23 Tok_coment//הערה
+14 Tok_assign  // <-
+15 Tok_math
+16 Tok_comp
+17 Tok_or   // |
+18 Tok_and //&
+19 Tok_block_end //||
+20 Tok_Right_paren//(
+21 Tok_Left_paren//)
+22 Tok_comma//,
+23 Tok_Colon//:
+24 Tok_coment//הערה
+25 Tok_semicolon   // ; אם כן כתבו
+26 Tok_error//
+27 Tok_EOF//
+28 Tok_count//
+

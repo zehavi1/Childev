@@ -6,7 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 #include "enums.h"
-#include "Lexema.h"
+#include "Token.h"
 
 using namespace std;
 
@@ -29,11 +29,11 @@ inline void printTabsDepth(int depth) {
 // צומת שמייצג טוקן בודד
 struct TokenNode : ASTNode {
 public:
-    Lexema token;
+    Token token;
 
     TokenNode() {  }
 
-    TokenNode(const Lexema& token) : token(token) {}
+    TokenNode(const Token& token) : token(token) {}
 
     void printASTNode(int depth = 0) override {
         printTabsDepth(depth);
@@ -153,18 +153,18 @@ public:
 struct BinaryOpNode : ASTNode {
 public:
     string name = "BinaryOpNode";
-    Lexema op;
+    Token op;
     shared_ptr<ASTNode> left;
     shared_ptr<ASTNode> right;
 
-    BinaryOpNode(const Lexema& op,
+    BinaryOpNode(const Token& op,
         shared_ptr<ASTNode> left,
         shared_ptr<ASTNode> right)
         : op(op), left(left), right(right) {
     }
 
     BinaryOpNode(string name,
-        const Lexema& op,
+        const Token& op,
         shared_ptr<ASTNode> left,
         shared_ptr<ASTNode> right)
         : name(name), op(op), left(left), right(right) {
@@ -213,10 +213,10 @@ public:
 struct UnaryOpNode : ASTNode {
 public:
     string name = "UnaryOpNode";
-    Lexema op;
+    Token op;
     shared_ptr<ASTNode> expr;
 
-    UnaryOpNode(const Lexema& op,
+    UnaryOpNode(const Token& op,
         shared_ptr<ASTNode> expr)
         : op(op), expr(expr) {
     }

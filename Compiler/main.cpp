@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include "LexicalAnalysis.h"
 
 #include "LexicalAnalyzer.h"
 #include "SyntaxAnalysis.h"
@@ -12,15 +13,15 @@
 
 using namespace std;
 
-vector<Lexema> convertLexemaListToVector(Lexema* head)
+vector<Token> convertLexemaListToVector(Token* head)
 {
-    vector<Lexema> result;
+    vector<Token> result;
 
-    Lexema* curr = head;
+    Token* curr = head;
 
     while (curr != nullptr)
     {
-        Lexema copy = *curr;
+        Token copy = *curr;
         copy.nextlex = nullptr; // כדי שהווקטור לא יחזיק מצביעים ישנים
         result.push_back(copy);
 
@@ -30,7 +31,7 @@ vector<Lexema> convertLexemaListToVector(Lexema* head)
     // אם ה־Lexer שלך לא מוסיף Tok_count לבד, נוסיף אותו כאן כסוף קלט
     if (result.empty() || result.back().typeToken != Tok_count)
     {
-        Lexema eof;
+        Token eof;
         eof.typeToken = Tok_count;
         eof.lex = "EOF";
         eof.nextlex = nullptr;
@@ -39,7 +40,58 @@ vector<Lexema> convertLexemaListToVector(Lexema* head)
 
     return result;
 }
-int main()
+void addEOF(Token* head)
+{
+    Token* p = head;
+	while (p != nullptr && p->nextlex != nullptr)
+	{
+		p = p->nextlex;
+	}
+    if (p->lex != "EOF" || p->typeToken != Tok_EOF)
+    {
+        Token eof;
+        eof.typeToken = Tok_count;
+        eof.lex = "EOF";
+        eof.nextlex = nullptr;
+        p->nextlex = new Token(eof);
+    }
+}
+
+int main3()
+{
+    string code1 =
+        "x <- 5\n"
+        "y <- \n"
+        "write(\"after error\", x)\n"
+        "if x = 5 :\n"
+        "write(\"ok\")\n"
+        "||\n"
+        "for i <- 1 to :\n"
+        "write(i)\n"
+        "||\n";
+    LexicalAnalyzer lexicalAnalysis;
+
+    auto errorReporter = make_shared<ErrorReporter>();
+
+    Token* list = lexicalAnalysis.getLexemaList(code1);
+    addEOF(list);
+
+    //vector<Lexema> tokens = convertLexemaListToVector(list);
+
+    SyntacticAnalysis parser(list, errorReporter);
+
+    shared_ptr<ASTNode> ast = parser.parse();
+
+    //cout << endl << "AST:" << endl;
+    //parser.printASTNodes(ast);
+
+    errorReporter->printErrorsForClient();
+
+    LexicalAnalyzer::freeLexemaList(list);
+
+    return 0;
+}
+int main2()
 {
     string code1 =
         "x <- 5\n"
@@ -129,11 +181,12 @@ int main()
 
     auto errorReporter = make_shared<ErrorReporter>();
 
-    Lexema* list = lexicalAnalysis.getLexemaList(code);
+    Token* list = lexicalAnalysis.getLexemaList(code);
+    addEOF(list);
 
-    vector<Lexema> tokens = convertLexemaListToVector(list);
+    //vector<Lexema> tokens = convertLexemaListToVector(list);
 
-    SyntacticAnalysis parser(tokens, errorReporter);
+    SyntacticAnalysis parser(list, errorReporter);
 
     shared_ptr<ASTNode> ast = parser.parse();
 
@@ -146,7 +199,8 @@ int main()
 
     return 0;
 }
-int main_check_syntatic()
+
+int main222()
 {
     try
     {
@@ -192,25 +246,26 @@ int main_check_syntatic()
         cout << "==============================" << endl;
         cout << code << endl;
 
-        LexicalAnalyzer lexicalAnalysis;
-
-        Lexema* list = lexicalAnalysis.getLexemaList(code);
+        //LexicalAnalyzer lexicalAnalysis;
+		LexicalAnalysis lexicalAnalysis;
+        buildAutomat b;
+        Token* list = lexicalAnalysis.getListTokens(code,&b);
 
         cout << endl;
         cout << "==============================" << endl;
         cout << "LEXEMA LIST" << endl;
         cout << "==============================" << endl;
 
-        LexicalAnalyzer::printLexemaList(list);
+        lexicalAnalysis.printListToken(list);
 
-        vector<Lexema> tokens = convertLexemaListToVector(list);
+        //vector<Lexema> tokens = convertLexemaListToVector(list);
 
         cout << endl;
         cout << "==============================" << endl;
         cout << "SYNTAX ANALYSIS - AST" << endl;
         cout << "==============================" << endl;
 
-        SyntacticAnalysis parser(tokens);
+        SyntacticAnalysis parser(list);
 
         shared_ptr<ASTNode> ast = parser.parse();
 
@@ -221,7 +276,7 @@ int main_check_syntatic()
         cout << "PARSE FINISHED SUCCESSFULLY" << endl;
         cout << "==============================" << endl;
 
-        LexicalAnalyzer::freeLexemaList(list);
+        //LexicalAnalyzer::freeLexemaList(list);
     }
     catch (const exception& ex)
     {
@@ -256,7 +311,7 @@ int checkLexer()
 
     LexicalAnalyzer lexicalAnalysis;
 
-    Lexema* list = lexicalAnalysis.getLexemaList(code);
+    Token* list = lexicalAnalysis.getLexemaList(code);
 
     LexicalAnalyzer::printLexemaList(list);
 

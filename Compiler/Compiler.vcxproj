@@ -145,9 +145,11 @@
     <ClCompile Include="enums.cpp" />
     <ClCompile Include="ErrorHandler.cpp" />
     <ClCompile Include="ErrorReporter.cpp" />
+    <ClCompile Include="LexicalAnalysis.cpp" />
     <ClCompile Include="LexicalAnalysis2.cpp" />
     <ClCompile Include="LexicalAnalyzer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mainForClient.cpp" />
     <ClCompile Include="SyntaxAnalysis.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -157,9 +159,9 @@
     <ClInclude Include="enums.h" />
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="ErrorReporter.h" />
-    <ClInclude Include="Lexema.h" />
-    <ClInclude Include="LexicalAnalysis.h" />
     <ClInclude Include="LexicalAnalyzer.h" />
+    <ClInclude Include="Token.h" />
+    <ClInclude Include="LexicalAnalysis.h" />
     <ClInclude Include="ParseException.h" />
     <ClInclude Include="SyntaxAnalysis.h" />
   </ItemGroup>

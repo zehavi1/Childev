@@ -5,7 +5,7 @@
 #include <memory>
 #include "enums.h"
 #include "ASTNode.h"
-#include "Lexema.h"
+#include "Token.h"
 #include "ErrorReporter.h"
 #include "ParseException.h"
 
@@ -14,11 +14,13 @@ using namespace std;
 class SyntacticAnalysis
 {
 private:
-    vector<Lexema> tokens;          // רשימת הלקסמות
+    const Token* tokens;   // רשימת הלקסמות
+    const Token* current;
     size_t currentTokenIndex = 0;   // איפה אנחנו נמצאים כרגע
     shared_ptr<ErrorReporter> errorReporter;
+    //vector<Lexema> tokens;
     void reportSyntaxError(const string& message);
-    void recoverToNextStatementOrStop(Token stopToken);
+    void recoverToNextStatementOrStop(TokenType stopToken);
     void failSyntax(const string& message);
     //void reportSyntaxError(const string& message);
     //void synchronize();
@@ -37,9 +39,11 @@ private:
 
 public:
     SyntacticAnalysis();
+    SyntacticAnalysis(const Token* tokens);
+    //SyntacticAnalysis(const vector<Lexema>& tokens);
 
-    SyntacticAnalysis(const vector<Lexema>& tokens);
-    SyntacticAnalysis(const vector<Lexema>& tokens, shared_ptr<ErrorReporter> errorReporter);
+    //SyntacticAnalysis(const vector<Lexema>& tokens, shared_ptr<ErrorReporter> errorReporter);
+    SyntacticAnalysis(const Token* tokens, shared_ptr<ErrorReporter> errorReporter);
 
     // הפונקציה הראשית
     shared_ptr<ASTNode> parse();
@@ -52,15 +56,15 @@ private:
     // פעולות עזר כלליות
     // =====================================================
 
-    Lexema currentToken();
+    Token currentToken();
 
-    Lexema peekNextToken();
+    Token peekNextToken();
 
     void nextToken();
 
     bool isEnd();
 
-    bool isCurrent(Token token);
+    bool isCurrent(TokenType token);
 
     bool isSeparator();
 
@@ -68,10 +72,10 @@ private:
 
     string currentLex();
 
-    Token currentTokenType();
+    TokenType currentTokenType();
 
     // התאמה לפי סוג טוקן
-    shared_ptr<TokenNode> match(Token token, string msg = "Unexpected token");
+    shared_ptr<TokenNode> match(TokenType token, string msg = "Unexpected token");
 
     // התאמה עבור Tok_math עם בדיקת lex
     shared_ptr<TokenNode> matchMath(const string& op, string msg = "Unexpected math operator");
@@ -106,7 +110,7 @@ private:
     shared_ptr<ASTNode> program();
 
     // StatementList ::= SeparatorsOpt [ Statement { Separators Statement } SeparatorsOpt ]
-    shared_ptr<ASTNode> statementList(Token stopToken);
+    shared_ptr<ASTNode> statementList(TokenType stopToken);
 
     // =====================================================
     // Statements
@@ -148,10 +152,6 @@ private:
 
     // Block ::= Tok_Colon StatementList Tok_block_end
     shared_ptr<ASTNode> block();
-
-    // =====================================================
-    // Arguments
-    // =====================================================
 
     // ArgsOpt ::= ε | ExpressionList
     shared_ptr<ASTNode> argsOpt();

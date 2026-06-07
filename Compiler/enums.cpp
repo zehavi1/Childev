@@ -1,4 +1,5 @@
 const char* TokenNames[] = {
+	"",
 	"Tok_identifier",
 
 	"Tok_else",
@@ -29,6 +30,8 @@ const char* TokenNames[] = {
 	"Tok_comment",
 
 	"Tok_newline",
-	"Tok_semicolon",
 	"Tok_error"
+	"Tok_EOF",
+	"Tok_count",
+	"Tok_semicolon"
 };
