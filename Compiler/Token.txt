@@ -17,8 +17,8 @@
 17 Tok_or   // |
 18 Tok_and //&
 19 Tok_block_end //||
-20 Tok_Right_paren//(
-21 Tok_Left_paren//)
+20 Tok_Left_paren//(
+21 Tok_Right_paren//)
 22 Tok_comma//,
 23 Tok_Colon//:
 24 Tok_coment//הערה

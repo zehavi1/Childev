@@ -6,10 +6,7 @@
 buildAutomat::buildAutomat()
 {
 
-	std::cout << "h333 file\n";
-
 	//אתחול מערך עזר
-
 	// אתחול מזהה תווים: אותיות A-Z ו-a-z מקבלות 1, שאר ברירת מחדל 0
 		// מערך עזר 
 	for (int i = 0; i < Ascii; i++)
@@ -37,42 +34,58 @@ buildAutomat::buildAutomat()
 		this->arrState[i].numToken = -1;
 		for (int j = 0; j < Ascii; j++)
 		{
-			this->arrState[i].hashState[j] = NULL;
+			this->arrState[i].hashState[j] = nullptr;
 		}
 	}
-	std::cout << "hhhh file\n";
 	ifstream file1("states.txt");
 	if (!file1.is_open())
 	{
-		cerr << "Cannot open file\n"; return;
+		cerr << "Cannot open file\n"; return;//שגיאה!
 	}
 
-
 	
+
+
+		
+			
+		
+
+		
 	int fromState, toState;
-	char inputChar;
-	while (file1 >> fromState >> inputChar >> toState)
+	string symbol;
+	while (file1 >> fromState >> symbol >> toState)
 	{
+	
 		if (fromState >= 0 && fromState < NumOfState &&
-			toState >= 0 && toState < NumOfState &&
-			(unsigned char)inputChar < Ascii)
+			toState >= 0 && toState < NumOfState)
 		{
-			this->arrState[fromState].hashState[(unsigned char)inputChar] =
-				&this->arrState[toState];
+			if (symbol.empty())
+			{
+				cerr << "שגיאה: תו ריק בקובץ states.txt\n";
+				continue;
+			}
+
+			char inputChar;
+
+			if (symbol == "SPACE")
+				inputChar = ' ';
+			else
+				inputChar = symbol[0];
+				
+			if((unsigned char)inputChar < Ascii)
+				this->arrState[fromState].hashState[(unsigned char)inputChar] =
+					&this->arrState[toState];
 		}
 		else
 			cerr << "שגיאה: ערך מחוץ לגבולות בקובץ states.txt\n";
-	
-	std::cout << fromState << '\n';
-    std::cout << inputChar << '\n';
-    std::cout << toState << '\n';
-	std::cout << "h333 file\n";
+	/*
+	std::cout << fromState ;
+    std::cout << inputChar ;
+    std::cout << toState << '\n';*/
 	}	
 		
 	
 	file1.close();
-
-	std::cout << "file 1 end file\n";
 
 	ifstream file2("accept_states_token.txt");
 	if (!file2.is_open())
@@ -80,9 +93,7 @@ buildAutomat::buildAutomat()
 		cerr << "Cannot open file\n"; return;
 	}//הודעת שגיאה
 
-	std::cout << "start read file2\n";
 
-	
 	int state, token;
 	while (file2 >> state >> token)
 	{
@@ -94,11 +105,10 @@ buildAutomat::buildAutomat()
 		else
 			cerr << "שגיאה: ערך מחוץ לגבולות בקובץ accept_states_token.txt\n";
 
-		std::cout << state << '\n';
-		std::cout << token << '\n';
+		/*std::cout << state ;
+		std::cout << token << '\n';*/
 	}
 	file2.close();
-	std::cout << "file 2 end file\n";
 
 	int arrToken[NumOfToken + 1] = { 0 };
 
@@ -108,12 +118,13 @@ buildAutomat::buildAutomat()
 		cerr << "Cannot open file\n"; return;
 	} //הודעת שגיאה
 
-	std::cout << "start read file2\n";
 
 	
 	int tok;
+
 	while (file3 >> tok)
 	{
+		
 		if (tok >= 0 && tok <= NumOfToken)
 		{
 			arrToken[tok] = 1;
@@ -121,11 +132,9 @@ buildAutomat::buildAutomat()
 		else
 			cerr << "שגיאה: ערך מחוץ לגבולות בקובץ compilerTxtData.txt\n";
 
-		std::cout << arrToken[tok] << '\n';
 	}
 	file3.close();
 
-	std::cout << "file 3 end file\n";
 
 	for (int i = 0; i < NumOfState; i++)
 	{
@@ -134,12 +143,11 @@ buildAutomat::buildAutomat()
 			arrToken[this->arrState[i].numToken] == 1)
 			for (int j = 0; j < Ascii; j++)
 			{
-				if (this->arrState[i].hashState[j] == NULL)
+				if (this->arrState[i].hashState[j] == nullptr)
 					this->arrState[i].hashState[j] = &this->arrState[1];
 
 			}
 	}
-	std::cout << "file 457 end file\n";
 
 
 	std::cout << "automat success!!!!!!!!!!!!!!!!!!!!!!!\n";

@@ -53,7 +53,7 @@ void addEOFClient(Token* head)
         p->nextlex = new Token(eof);
     }
 }
-int main(int argc, char* argv[])
+int mainclient(int argc, char* argv[])
 {
     try
     {

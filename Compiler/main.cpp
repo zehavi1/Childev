@@ -91,7 +91,7 @@ int main3()
 
     return 0;
 }
-int main2()
+int mainerrors()
 {
     string code1 =
         "x <- 5\n"
@@ -199,8 +199,65 @@ int main2()
 
     return 0;
 }
+int main()
+{
+    string code =
+        "x <- 5\n"
+        "y <- 10\n"
+        "sum <- 0\n"
+        "write(\"Start program\", x, y)\n"
+        "\n"
+        "if x = 5 :\n"
+        "write(\"x is five\")\n"
+        "sum <- x + y * 2\n"
+        "||\n"
+        "else :\n"
+        "write(\"x is not five\")\n"
+        "sum <- y\n"
+        "||\n"
+        "\n"
+        "while x < 10 :\n"
+        "write(\"x = \", x)\n"
+        "x <- x + 1\n"
+        "||\n"
+        "\n"
+        "for i <- 1 to 5 :\n"
+        "write(\"i = \", i, \" sum = \", sum)\n"
+        "sum <- sum + i\n"
+        "||\n"
+        "\n"
+        "for (j <- 1 to 3) :\n"
+        "if j != 2 :\n"
+        "write(\"j is not 2\", j)\n"
+        "||\n"
+        "else :\n"
+        "write(\"j is 2\")\n"
+        "||\n"
+        "||\n"
+        "\n"
+        "result <- (sum + x) * 2 ^ 3\n"
+        "write(\"Final result = \", result)\n";
+    LexicalAnalyzer lexicalAnalysis;
 
-int main222()
+    auto errorReporter = make_shared<ErrorReporter>();
+
+    Token* list = lexicalAnalysis.getLexemaList(code);
+    addEOF(list);
+
+    //vector<Lexema> tokens = convertLexemaListToVector(list);
+
+    SyntacticAnalysis parser(list, errorReporter);
+
+    shared_ptr<ASTNode> ast = parser.parse();
+
+    cout << endl << "AST:" << endl;
+    parser.printASTNodes(ast);
+
+    errorReporter->printErrors();
+
+    LexicalAnalyzer::freeLexemaList(list);
+}
+int main11111()
 {
     try
     {
