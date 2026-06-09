@@ -3,9 +3,12 @@
 #include <sstream>
 #include <string>
 #include <memory>
+#include <filesystem>
+//#include <windows.h>
 #include "SyntaxAnalysis.h"
 #include "ASTNode.h"
-#include "LexicalAnalyzer.h"
+//#include "LexicalAnalyzer.h"
+#include "LexicalAnalysis.h"
 
 using namespace std;
 
@@ -15,7 +18,7 @@ string readFileToString(const string& filePath)
 
     if (!file.is_open())
     {
-        throw runtime_error("Cannot open input file");
+        throw runtime_error("Cannot open input file"+filePath);
     }
 
     stringstream buffer;
@@ -37,6 +40,13 @@ string sanitizeForClient(string text)
 
     return text;
 }
+void setCurrentDirectoryToExeFolder(char* argv0)
+{
+    filesystem::path exePath = filesystem::absolute(argv0);
+    filesystem::path exeFolder = exePath.parent_path();
+
+    filesystem::current_path(exeFolder);
+}
 void addEOFClient(Token* head)
 {
     Token* p = head;
@@ -47,32 +57,48 @@ void addEOFClient(Token* head)
     if (p->lex != "EOF" || p->typeToken != Tok_EOF)
     {
         Token eof;
-        eof.typeToken = Tok_count;
+        eof.typeToken = Tok_EOF;
         eof.lex = "EOF";
         eof.nextlex = nullptr;
         p->nextlex = new Token(eof);
     }
 }
-int mainclient(int argc, char* argv[])
+void freeTokenList(Token* head)
+{
+	Token* current = head;
+	while (current != nullptr)
+	{
+		Token* next = current->nextlex;
+		delete current;
+		current = next;
+	}
+}
+int main(int argc, char* argv[])
 {
     try
     {
+        
         if (argc < 2)
         {
             cout << "ERROR|0|0|System|Missing input file path" << endl;
             return 0;
         }
-
-        string inputFilePath = argv[1];
+        //string inputFilePath = argv[1];
+        filesystem::path inputFilePath = filesystem::absolute(argv[1]);
+        setCurrentDirectoryToExeFolder(argv[0]);
 
         // קוראים את הקוד שהשרת שמר בקובץ זמני
-        string code = readFileToString(inputFilePath);
+        string code = readFileToString(inputFilePath.string());
 
-        LexicalAnalyzer lexicalAnalysis;
+        //LexicalAnalyzer lexicalAnalysis;
 
         auto errorReporter = make_shared<ErrorReporter>();
+        auto b = new buildAutomat();
+		LexicalAnalysis lexicalAnalysis;
+        Token* list = lexicalAnalysis.getListTokens(code, b, errorReporter);
+        //addEOFToList(list);
 
-        Token* list = lexicalAnalysis.getLexemaList(code);
+        //Token* list = lexicalAnalysis.getLexemaList(code);
 
         addEOFClient(list);
 
@@ -84,8 +110,9 @@ int mainclient(int argc, char* argv[])
         // parser.printASTNodes(ast);
 
         errorReporter->printErrorsForClient();
+        freeTokenList(list);
 
-        LexicalAnalyzer::freeLexemaList(list);
+        //LexicalAnalyzer::freeLexemaList(list);
 
         return 0;
     }

@@ -40,7 +40,7 @@ buildAutomat::buildAutomat()
 	ifstream file1("states.txt");
 	if (!file1.is_open())
 	{
-		cerr << "Cannot open file\n"; return;//שגיאה!
+		cerr << "Cannot open file states.txt\n"; return;//שגיאה!
 	}
 
 	
@@ -90,7 +90,7 @@ buildAutomat::buildAutomat()
 	ifstream file2("accept_states_token.txt");
 	if (!file2.is_open())
 	{
-		cerr << "Cannot open file\n"; return;
+		cerr << "Cannot open file accept_states_token.txt\n"; return;
 	}//הודעת שגיאה
 
 
@@ -115,7 +115,7 @@ buildAutomat::buildAutomat()
 	ifstream file3("compilerTxtData.txt");
 	if (!file3.is_open())
 	{
-		cerr << "Cannot open file\n"; return;
+		cerr << "Cannot open file compilerTxtData.txt\n"; return;
 	} //הודעת שגיאה
 
 
@@ -150,7 +150,7 @@ buildAutomat::buildAutomat()
 	}
 
 
-	std::cout << "automat success!!!!!!!!!!!!!!!!!!!!!!!\n";
+	//std::cout << "automat success!!!!!!!!!!!!!!!!!!!!!!!\n";
 
 	
 

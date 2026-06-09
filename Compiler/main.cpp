@@ -199,7 +199,7 @@ int mainerrors()
 
     return 0;
 }
-int main()
+int main_______()
 {
     string code =
         "x <- 5\n"
@@ -234,17 +234,28 @@ int main()
         "write(\"j is 2\")\n"
         "||\n"
         "||\n"
-        "\n"
-        "result <- (sum + x) * 2 ^ 3\n"
-        "write(\"Final result = \", result)\n";
-    LexicalAnalyzer lexicalAnalysis;
+        "\n";
+        //"result <- (sum + x) * 2 ^ 3\n"
+        //"write(\"Final result = \", result)\n"
+        //"while :\n"                            // חסר תנאי אחרי while
+        //"x <- x + 1\n"
+        //"||\n"
+        //"\n"
+
+        //"while x < 10 :\n"
+        //"x <- x + \n"                          // חסר ביטוי אחרי +
+        //"write(\"still inside while\", x)\n"
+        //"||\n"
+        //"\n";
+
+    LexicalAnalysis lexicalAnalysis;
 
     auto errorReporter = make_shared<ErrorReporter>();
+    auto b = new buildAutomat();
 
-    Token* list = lexicalAnalysis.getLexemaList(code);
+	Token* list = lexicalAnalysis.getListTokens(code,b,errorReporter);
     addEOF(list);
-
-    //vector<Lexema> tokens = convertLexemaListToVector(list);
+    lexicalAnalysis.printListToken(list);
 
     SyntacticAnalysis parser(list, errorReporter);
 
@@ -256,8 +267,9 @@ int main()
     errorReporter->printErrors();
 
     LexicalAnalyzer::freeLexemaList(list);
+    return 0;
 }
-int main11111()
+int main1()
 {
     try
     {
@@ -306,14 +318,14 @@ int main11111()
         //LexicalAnalyzer lexicalAnalysis;
 		LexicalAnalysis lexicalAnalysis;
         buildAutomat b;
-        Token* list = lexicalAnalysis.getListTokens(code,&b);
+        //Token* list = lexicalAnalysis.getListTokens(code,&b);
 
         cout << endl;
         cout << "==============================" << endl;
         cout << "LEXEMA LIST" << endl;
         cout << "==============================" << endl;
 
-        lexicalAnalysis.printListToken(list);
+        //lexicalAnalysis.printListToken(list);
 
         //vector<Lexema> tokens = convertLexemaListToVector(list);
 
@@ -322,11 +334,11 @@ int main11111()
         cout << "SYNTAX ANALYSIS - AST" << endl;
         cout << "==============================" << endl;
 
-        SyntacticAnalysis parser(list);
+        //SyntacticAnalysis parser(list);
 
-        shared_ptr<ASTNode> ast = parser.parse();
+       // shared_ptr<ASTNode> ast = parser.parse();
 
-        parser.printASTNodes(ast);
+        //parser.printASTNodes(ast);
 
         cout << endl;
         cout << "==============================" << endl;

@@ -1,32 +1,83 @@
 #include "LexicalAnalysis.h"
 #include "buildAutomat.h"
+
 LexicalAnalysis::LexicalAnalysis()
 {
 }
-Token* LexicalAnalysis::TokenLex(string lex, buildAutomat* root_b, int currentLine)
+
+void LexicalAnalysis::reportLexicalError(
+	shared_ptr<ErrorReporter> errorReporter,
+	const string& message,
+	const string& lexeme,
+	int lineNumber,
+	int columnNumber
+)
+{
+	if (errorReporter != nullptr)
+	{
+		errorReporter->report(
+			ErrorKind::Lexical,
+			message,
+			lexeme,
+			lineNumber,
+			columnNumber
+		);
+	}
+}
+
+Token* LexicalAnalysis::TokenLex(
+	string lex,
+	buildAutomat* root_b,
+	int currentLine,
+	shared_ptr<ErrorReporter> errorReporter,
+	int columnNumber
+)
 //פונקצייה המקבלת לקסמה ומצביע למבנה האוטומט וממספר שורה, 
 //הפונקציה עוברת על האוטומט למציאת טוקן מקבל
 //הפונקציה מחזירה מצביע חטוקן המכיל: מספר טוקן, לקסמה, מספר שורה,ומצביע לטוקן הבא
-//צריך לזרוק פה שגיאות!!!!!!
+//אם הלקסמה אינה חוקית - נרשמת שגיאה לקסיקלית והפונקציה מחזירה nullptr
 {
 	State* current = &(root_b->arrState[0]);
 
 	for (int i = 0; i < lex.length(); i++)
 	{
 		unsigned char c = lex[i];
+
 		if (current->hashState[c] == nullptr)
+		{
+			reportLexicalError(
+				errorReporter,
+				"Unrecognized token",
+				lex,
+				currentLine,
+				columnNumber
+			);
+
 			return nullptr;
+		}
+
 		current = current->hashState[c];
 	}
 
 	if (current->numToken == -1)
+	{
+		reportLexicalError(
+			errorReporter,
+			"Unrecognized token",
+			lex,
+			currentLine,
+			columnNumber
+		);
+
 		return nullptr;
+	}
 
 	Token* node = new Token();
 	node->lex = lex;
-	node->typeToken =(TokenType)current->numToken;
+	node->typeToken = (TokenType)current->numToken;
 	node->lineNumber = currentLine;
 	node->nextlex = nullptr;
+
 	return node;
 }
 
@@ -34,19 +85,51 @@ Token* LexicalAnalysis::TokenLex(string lex, buildAutomat* root_b, int currentLi
 //TokenLex  הפונקציה עוברת על הקוד, מחלקת ללקסמות, בודקת תווים מיוחדים ומזמנת את הפונקציה 
 //הפונקציה בונה רשימה של טוקנים ומחזירה אותה.
 
-Token* LexicalAnalysis::getListTokens(string code, buildAutomat* root_b)
+Token* LexicalAnalysis::getListTokens(
+	string code,
+	buildAutomat* root_b,
+	shared_ptr<ErrorReporter> errorReporter
+)
 {
 	Token* listHead = nullptr;
 	Token* listTail = nullptr;
-	int currentLine = 0;
+
+	int currentLine = 1;
+	int currentColumn = 1;
+
 	//רשימת מפרידים לבדוק אם לעשות בenum ומה עוד ברשימה
-	string List_of_separators = " ()|&:,/+-*^={}\"'<>!=;\n";
+	string List_of_separators = " ()|&:,/+-*^={}\"'<>!=;\n\t\r";
+
 	int x = 0;
 	string lexema_from_code = "";
+
+	int tokenLine = currentLine;
+	int tokenColumn = currentColumn;
+
+	auto advance = [&]()
+		{
+			if (x >= code.length())
+				return;
+
+			if (code[x] == '\n')
+			{
+				currentLine++;
+				currentColumn = 1;
+			}
+			else
+			{
+				currentColumn++;
+			}
+
+			x++;
+		};
+
 	auto addNode = [&](Token* node) //פונקציית למדה הוספת טוקן לרשימת הטוקנים
 		{
-			if (node == nullptr) return;//צריך לבצע הוספה לרשימת השגיאות
+			if (node == nullptr) return; //השגיאה כבר תועדה במקום שבו נוצרה
+
 			node->nextlex = nullptr;
+
 			if (listHead == nullptr) //אם הרשימה ריקה
 				listHead = listTail = node;
 			else
@@ -55,178 +138,349 @@ Token* LexicalAnalysis::getListTokens(string code, buildAutomat* root_b)
 				listTail = node;
 			}
 		};
-	int tokenLine = currentLine;
+
+	auto addTokenFromLexeme = [&](const string& lexeme, int line, int column)
+		{
+			if (lexeme.empty())
+				return;
+
+			Token* token = TokenLex(
+				lexeme,
+				root_b,
+				line,
+				errorReporter,
+				column
+			);
+
+			addNode(token);
+		};
+
+	auto flushRegularLexeme = [&]()
+		{
+			if (!lexema_from_code.empty())
+			{
+				addTokenFromLexeme(lexema_from_code, tokenLine, tokenColumn);
+				lexema_from_code = "";
+			}
+		};
+
 	while (x < code.length())
 	{
-
-
 		//אם זה לא מתווי המפרידים
 		if (List_of_separators.find(code[x]) == string::npos)
 		{
+			if (lexema_from_code.empty())
+			{
+				tokenLine = currentLine;
+				tokenColumn = currentColumn;
+			}
+
 			lexema_from_code += code[x];
-			x++;
+			advance();
 		}
 		else
 		{
 			//אם זה מתווי המפרידים-שולחים את הלקסמה האחרונה לאוטומט-רק אם היא לא ריקה
-			if (!lexema_from_code.empty())
-			{
-				Token* l1 = TokenLex(lexema_from_code, root_b, currentLine);
-				addNode(l1);
-				lexema_from_code = "";
-			}
+			flushRegularLexeme();
+
+			tokenLine = currentLine;
+			tokenColumn = currentColumn;
+
 			//טיפול במפריד
 			switch (code[x])
 			{
 			case '\n':
-				currentLine++;
 			case ';':
 			{
-				if ((listTail != nullptr && listTail->typeToken == Tok_newline) || (listTail == nullptr) /*(code[x - 1] == ';' || code[x - 1] == '\n')*/)
+				if ((listTail != nullptr &&
+					(listTail->typeToken == Tok_newline || listTail->typeToken == Tok_semicolon))
+					|| (listTail == nullptr))
 				{
-					x++;
+					advance();
 					continue;
+				}
 
-				}
-				tokenLine = currentLine;
+				// בשפה שלנו ירידת שורה ונקודה־פסיק משמשות כמפריד פקודות.
+				// אם באוטומט  ירידת שורה מוגדרת אחרת, אפשר להחליף כאן ל-"\n".
 				lexema_from_code = ";";
-				
-				break;
-			}
-			case ' ':
+				addTokenFromLexeme(lexema_from_code, tokenLine, tokenColumn);
 				lexema_from_code = "";
-				break;
+
+				advance();
+				continue;
+			}
+
+			case ' ':
+			case '\t':
+			case '\r':
+				lexema_from_code = "";
+				advance();
+				continue;
+
 			case '\'':
+			{
 				lexema_from_code += code[x];
-				x++;
-				if (x < code.length() && code[x] != '\'') // התו הפנימי
+				advance();
+
+				if (x < code.length() && code[x] != '\'' && code[x] != '\n') // התו הפנימי
 				{
 					lexema_from_code += code[x];
-					x++;
+					advance();
 				}
-				if (x < code.length() && code[x] == '\'') // ' סוגר
-					lexema_from_code += code[x];
-				else {
-					x++;
+				else
+				{
+					reportLexicalError(
+						errorReporter,
+						"Invalid char literal",
+						lexema_from_code,
+						tokenLine,
+						tokenColumn
+					);
+
 					//תו לא סגור
+					lexema_from_code = "";
 					continue;
 				}
-				//הוספה שגיאה מתאימה לרשימת השגיאות
-				break;
+
+				if (x < code.length() && code[x] == '\'') // ' סוגר
+				{
+					lexema_from_code += code[x];
+					advance();
+
+					addTokenFromLexeme(lexema_from_code, tokenLine, tokenColumn);
+					lexema_from_code = "";
+					continue;
+				}
+				else
+				{
+					//תו לא סגור
+					reportLexicalError(
+						errorReporter,
+						"Unclosed char literal",
+						lexema_from_code,
+						tokenLine,
+						tokenColumn
+					);
+
+					// התאוששות: מדלגים עד מפריד או עד סוף שורה
+					while (x < code.length()
+						&& List_of_separators.find(code[x]) == string::npos
+						&& code[x] != '\n')
+					{
+						advance();
+					}
+
+					lexema_from_code = "";
+					continue;
+				}
+			}
 
 			case '{':
+			{
 				lexema_from_code += code[x];
-				x++;
+				advance();
+
 				while (x < code.length() && code[x] != '}')
 				{
 					lexema_from_code += code[x];
-					x++;
+					advance();
 				}
+
 				if (x < code.length() && code[x] == '}') // אם מצאנו את הסוגר
+				{
 					lexema_from_code += code[x]; // הוספת הסוגר ללקסמה
-				else {
-					x++;
-					cout << "שגיאה לקסיקאלית: הערה לא סגורה\n";
+					advance();
+
+					//addTokenFromLexeme(lexema_from_code, tokenLine, tokenColumn);
+					lexema_from_code = "";
 					continue;
-
 				}
+				else
+				{
+					//הוספה שגיאה מתאימה לרשימת השגיאות
+					reportLexicalError(
+						errorReporter,
+						"Unclosed comment",
+						lexema_from_code,
+						tokenLine,
+						tokenColumn
+					);
 
-				break;
-				//הוספה שגיאה מתאימה לרשימת השגיאות
-
+					lexema_from_code = "";
+					continue;
+				}
+			}
 
 			case '"':
+			{
 				lexema_from_code += code[x];
-				x++;
+				advance();
+
 				while (x < code.length() && code[x] != '"')
 				{
 					lexema_from_code += code[x];
-					x++;
+					advance();
 				}
+
 				if (x < code.length() && code[x] == '"') // אם מצאנו את הסוגר
-					lexema_from_code += code[x]; // הוספת הסוגר ללקסמה
-				else
 				{
-					x++;
-					cout << "שגיאה לקסיקאלית: מחרוזת לא סגורה\n";
+					lexema_from_code += code[x]; // הוספת הסוגר ללקסמה
+					advance();
+
+					addTokenFromLexeme(lexema_from_code, tokenLine, tokenColumn);
+					lexema_from_code = "";
 					continue;
 				}
-				//הוספה שגיאה מתאימה לרשימת השגיאות
+				else
+				{
+					//הוספה שגיאה מתאימה לרשימת השגיאות
+					reportLexicalError(
+						errorReporter,
+						"Unclosed string",
+						lexema_from_code,
+						tokenLine,
+						tokenColumn
+					);
 
+					lexema_from_code = "";
+					continue;
+				}
+			}
 
-				break;
 			case '|':
-				if (x + 1 < code.length() && code[x + 1] == '|')
+			{
+				lexema_from_code += code[x];
+				advance();
+
+				if (x < code.length() && code[x] == '|')
 				{
 					lexema_from_code += code[x];
-					x++;
+					advance();
 				}
-				lexema_from_code += code[x];
-				break;
+
+				addTokenFromLexeme(lexema_from_code, tokenLine, tokenColumn);
+				lexema_from_code = "";
+				continue;
+			}
+
 			case '<':
+			{
+				lexema_from_code += code[x];
+				advance();
+
+				if (x < code.length() && (code[x] == '=' || code[x] == '-'))
+				{
+					lexema_from_code += code[x];
+					advance();
+				}
+
+				addTokenFromLexeme(lexema_from_code, tokenLine, tokenColumn);
+				lexema_from_code = "";
+				continue;
+			}
+
 			case '>':
+			{
+				lexema_from_code += code[x];
+				advance();
+
+				if (x < code.length() && code[x] == '=')
+				{
+					lexema_from_code += code[x];
+					advance();
+				}
+
+				addTokenFromLexeme(lexema_from_code, tokenLine, tokenColumn);
+				lexema_from_code = "";
+				continue;
+			}
+
 			case '!':
+			{
 				if (x + 1 < code.length() && code[x + 1] == '=')
 				{
 					lexema_from_code += code[x];
-					x++;
+					advance();
 
-				}
-				else {
-					if (code[x] == '!')
-					{
-						//שגיאה אם זה לא !=
-						cout << "שגיאה לקסיקאלית: ! לבד אינו חוקי\n";
-						lexema_from_code = "";
-						//להוסיף לרשימת השגיאות לקסיקאליות
-						break;
+					lexema_from_code += code[x];
+					advance();
 
-					}
-					if (code[x] == '<')
-					{
-						if (x + 1 < code.length() && code[x + 1] == '-')
-						{
-							lexema_from_code += code[x];
-							x++;
-						}
-					}
+					addTokenFromLexeme(lexema_from_code, tokenLine, tokenColumn);
+					lexema_from_code = "";
+					continue;
 				}
-				lexema_from_code += code[x];
-				break;
+				else
+				{
+					//שגיאה אם זה לא !=
+					reportLexicalError(
+						errorReporter,
+						"'!' alone is not legal. Did you mean '!='?",
+						"!",
+						tokenLine,
+						tokenColumn
+					);
+
+					lexema_from_code = "";
+					advance();
+					continue;
+				}
+			}
+
 			case '=':
+			{
+				lexema_from_code += code[x];
+				advance();
 
-				if (x + 1 < code.length() && (code[x + 1] == '<' || code[x + 1] == '>' || code[x + 1] == '!'))
+				if (x < code.length() && (code[x] == '<' || code[x] == '>'))
 				{
 					lexema_from_code += code[x];
-					x++;
+					advance();
 				}
-				lexema_from_code += code[x];
-				break;
-			default://כלומר אם  code[x] הוא מפריד אבל לא אחד מהמיוחדים שצריך לבדוק אם יש להם תו נוסף אחרי או לא- כלומר מפריד רגיל כמו ()&+-*^:,
-				//מה זה עושה ? בכל מקרה? או כמו else?
-				lexema_from_code = code[x];
-				break;
-			}
-			if (x < code.length() && (code[x] == ' ' || code[x] == '!'))
-			{
-				x++;
+				else if (x < code.length() && code[x] == '!')
+				{
+					reportLexicalError(
+						errorReporter,
+						"Invalid comparison operator. Did you mean '!='?",
+						"=!",
+						tokenLine,
+						tokenColumn
+					);
+
+					advance();
+					lexema_from_code = "";
+					continue;
+				}
+
+				addTokenFromLexeme(lexema_from_code, tokenLine, tokenColumn);
+				lexema_from_code = "";
 				continue;
 			}
-			if (!lexema_from_code.empty())
-			{
-				Token* l = TokenLex(lexema_from_code, root_b, tokenLine);
-				addNode(l);
+
+			default:
+				//כלומר אם  code[x] הוא מפריד אבל לא אחד מהמיוחדים שצריך לבדוק אם יש להם תו נוסף אחרי או לא- כלומר מפריד רגיל כמו ()&+-*^:,
+				lexema_from_code = code[x];
+				advance();
+
+				addTokenFromLexeme(lexema_from_code, tokenLine, tokenColumn);
+				lexema_from_code = "";
+				continue;
 			}
-			x++;
-			lexema_from_code = "";
 		}
 	}
+
 	if (!lexema_from_code.empty())
 	{
-		Token* lexema_end = TokenLex(lexema_from_code, root_b, tokenLine);
+		Token* lexema_end = TokenLex(
+			lexema_from_code,
+			root_b,
+			tokenLine,
+			errorReporter,
+			tokenColumn
+		);
 
 		addNode(lexema_end);
 	}
+
 	return listHead;
 }
 
@@ -258,302 +512,4 @@ void LexicalAnalysis::deleteTokens(Token* head)
 		delete current;
 		current = next;
 	}
-
 }
-
-//LexicalAnalysis::LexicalAnalysis()
-//{
-//}
-//Token* LexicalAnalysis::TokenLex(string lex, buildAutomat* root_b, int currentLine) 
-////פונקצייה המקבלת לקסמה ומצביע למבנה האוטומט וממספר שורה, 
-////הפונקציה עוברת על האוטומט למציאת טוקן מקבל
-////הפונקציה מחזירה מצביע חטוקן המכיל: מספר טוקן, לקסמה, מספר שורה,ומצביע לטוקן הבא
-////צריך לזרוק פה שגיאות!!!!!!
-//{
-//	State* current = &root_b->arrState[0];
-//
-//	for (int i = 0; i < lex.length(); i++)
-//	{
-//		unsigned char c = lex[i];
-//		if (current->hashState[c] == nullptr)
-//			return nullptr;
-//		current = current->hashState[c];
-//	}
-//
-//	if (current->numToken == -1)
-//		return nullptr;
-//
-//	Token* node = new Token();
-//	node->lex = lex;
-//	node->typeToken = (TokenType)current->numToken;
-//	node->lineNumber = currentLine;
-//	node->nextlex = nullptr;
-//	return node;
-//}
-//
-////פונקצייה שמקבלת קוד, ומצביע לאוטומט
-////TokenLex  הפונקציה עוברת על הקוד, מחלקת ללקסמות, בודקת תווים מיוחדים ומזמנת את הפונקציה 
-////הפונקציה בונה רשימה של טוקנים ומחזירה אותה.
-//Token* LexicalAnalysis::getListTokens(string code,buildAutomat* root_b)
-//{
-//	Token* listHead = nullptr;
-//	Token* listTail = nullptr;
-//	int currentLine = 1;
-//	//רשימת מפרידים לבדוק אם לעשות בenum ומה עוד ברשימה
-//	string List_of_separators =	" ()|&:,/+-*^={}\"'<>!=;\n";
-//	int x = 0;
-//	string lexema_from_code = "";
-//	auto addNode = [&](Token* node) //פונקציית למדה הוספת טוקן לרשימת הטוקנים
-//		{
-//			if (node == nullptr) return;//צריך לבצע הוספה לרשימת השגיאות
-//			node->nextlex = nullptr;
-//			if (listHead == nullptr) //אם הרשימה ריקה
-//				listHead = listTail = node;
-//			else
-//			{
-//				listTail->nextlex = node;
-//				listTail = node;
-//			}
-//		};
-//	
-//	while (x < code.length())
-//	{
-//			
-//			//אם זה לא מתווי המפרידים
-//			if (List_of_separators.find(code[x]) == string::npos)
-//			{
-//				lexema_from_code += code[x];
-//				x++;
-//			}
-//			else
-//			{	//אם זה מתווי המפרידים-שולחים את הלקסמה האחרונה לאוטומט-רק אם היא לא ריקה
-//				if (!lexema_from_code.empty())
-//				{
-//					Token* l1 = TokenLex(lexema_from_code, root_b, currentLine);
-//					addNode(l1);
-//					lexema_from_code = "";
-//				}
-//
-//
-//				//טיפול במפריד
-//				switch (code[x])
-//				{
-//				case '\n':
-//				case ';':
-//				{
-//					
-//						//  ניצור צומת ידנית
-//					/*if (x - 1 > 0 && (code[x - 1] != ';' && code[x - 1] != '\n'))
-//					{
-//						Token* sep = TokenLex(";", root_b, currentLine);
-//						currentLine++;
-//						addNode(sep);
-//					}*/
-//				if(x-1>0 && (code[x-1] != ';'&& code[x - 1] != '\n'))
-//				{
-//					Token* sep = new Token();
-//					sep->lex = ";"; //האם להפריד ל ; וירידת שורה או שאין ענין
-//					//מספר טוקן זה רק למקבל?? או גם לירידת שורה שלא נמצא באוטומט
-//					sep->nextlex = nullptr;
-//					sep->lineNumber = currentLine;
-//					sep->typeToken =Tok_newline;
-//					currentLine++;
-//					addNode(sep);
-//				}
-//						
-//					break;
-//				}
-//				case ' ':
-//					lexema_from_code = "";
-//					cout << "One\n";
-//					break;
-//				case '\'':
-//					lexema_from_code += code[x];
-//					x++;
-//					if (x < code.length() && code[x] != '\'') // התו הפנימי
-//					{
-//						lexema_from_code += code[x];
-//						x++;
-//					}
-//					if (x < code.length() && code[x] == '\'') // ' סוגר
-//						lexema_from_code += code[x];
-//					//הוספה שגיאה מתאימה לרשימת השגיאות
-//					break;
-//
-//
-//				case '{':
-//					lexema_from_code += code[x];
-//					x++;
-//					while (x < code.length() && code[x] != '}')
-//					{
-//						lexema_from_code += code[x];
-//						x++;
-//					}
-//					if (x < code.length() && code[x] == '}') // אם מצאנו את הסוגר
-//						lexema_from_code += code[x]; // הוספת הסוגר ללקסמה
-//					else
-//						cout << "שגיאה לקסיקאלית: הערה לא סגורה\n";
-//					break;
-//					//הוספה שגיאה מתאימה לרשימת השגיאות
-//
-//
-//				case '"':
-//					lexema_from_code += code[x];
-//					x++;
-//					while (x < code.length() && code[x] != '"')
-//					{
-//						lexema_from_code += code[x];
-//						x++;
-//					}
-//					if (x < code.length() && code[x] == '"') // אם מצאנו את הסוגר
-//						lexema_from_code += code[x]; // הוספת הסוגר ללקסמה
-//					else
-//						cout << "שגיאה לקסיקאלית: מחרוזת לא סגורה\n";
-//					//הוספה שגיאה מתאימה לרשימת השגיאות
-//
-//
-//					break;
-//				case '|':
-//					if (x + 1 < code.length() && code[x + 1] == '|')
-//					{
-//						lexema_from_code += code[x];
-//						x++;
-//					}
-//					lexema_from_code += code[x];
-//
-//					cout << "One\n";
-//					break;
-//				case '<':
-//				case '>':
-//				case '!':
-//					if (x + 1 < code.length() && code[x + 1] == '=')
-//					{
-//						lexema_from_code += code[x];
-//						x++;
-//
-//					}
-//					else {
-//						if (code[x] == '!')
-//						{
-//							//שגיאה אם זה לא !=
-//							cout << "שגיאה לקסיקאלית: ! לבד אינו חוקי\n";
-//							lexema_from_code = "";
-//
-//
-//							//להוסיף לרשימת השגיאות לקסיקאליות
-//							break;
-//
-//						}
-//						if (code[x] == '<')
-//						{
-//							if (x + 1 < code.length() && code[x + 1] == '-')
-//							{
-//								lexema_from_code += code[x];  
-//								x++;                           
-//							 
-//							}
-//							
-//						}
-//
-//						
-//					
-//					}
-//
-//					lexema_from_code += code[x];
-//
-//
-//					cout << "One\n";
-//					break;
-//				case '=':
-//
-//					if (x + 1 < code.length() && (code[x + 1] == '<' || code[x + 1] == '>' || code[x + 1] == '!'))
-//					{
-//						lexema_from_code += code[x];
-//						x++;
-//					}
-//					lexema_from_code += code[x];
-//
-//
-//
-//					cout << "One\n";
-//					break;
-//				
-//				
-//				default://כלומר אם  code[x] הוא מפריד אבל לא אחד מהמיוחדים שצריך לבדוק אם יש להם תו נוסף אחרי או לא- כלומר מפריד רגיל כמו ()&+-*^:,
-//					//מה זה עושה ? בכל מקרה? או כמו else?
-//					lexema_from_code = code[x];
-//
-//					//cout << "Unknown\n";
-//					break;
-//				}
-//
-//				if (x < code.length() && (code[x] == ' ' || code[x]=='!'))
-//				{
-//					x++;
-//					continue;
-//				}
-//				if (!lexema_from_code.empty())
-//				{
-//					Token* l = TokenLex(lexema_from_code, root_b,currentLine);
-//					addNode(l);
-//				}
-//				
-//				
-//				x++;
-//				lexema_from_code = "";
-//
-//
-//
-//				//שורות מיותרות לכאורה
-//				//שליחת הלקסמה לאוטומט
-//				//Lexema* l = TokenLex(lexema_from_code);
-//				//lexema_from_code = "";
-//				//יצירת מצביע לרשימה חדשה המייצגת שורה חדשה
-//				//הוספת מצביע זה לרשימה של מצביעים ללקס
-//				//Lexema* l = this.tokenLex(lexema_from_code);//הוספת טוקן לרשימה
-//
-//
-//
-//			}
-//		
-//								
-//	}
-//	if (!lexema_from_code.empty())
-//	{
-//		Token* lexema_end = TokenLex(lexema_from_code,root_b,currentLine);
-//
-//		addNode(lexema_end);
-//	}
-//	return listHead;
-//}
-//
-//void LexicalAnalysis::printListToken(Token* head)
-//{
-//	Token* current = head;
-//
-//	while (current != nullptr)
-//	{
-//		cout << "lexema: "
-//			<< current->lex
-//			<< " | token: "
-//			<< TokenNames[ current->typeToken]
-//			<< " | lineNumber: "
-//			<< current->lineNumber
-//			<< endl;
-//
-//		current = current->nextlex;
-//	}
-//}
-//
-//void LexicalAnalysis::deleteTokens(Token* head)
-//{
-//		Token* current = head;
-//
-//		while (current != nullptr)
-//		{
-//			Token* next = current->nextlex;
-//			delete current;
-//			current = next;
-//		}
-//	
-//}
