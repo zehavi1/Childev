@@ -18,31 +18,14 @@ private:
     const Token* current;
     size_t currentTokenIndex = 0;   // איפה אנחנו נמצאים כרגע
     shared_ptr<ErrorReporter> errorReporter;
-    //vector<Lexema> tokens;
+    
     void reportSyntaxError(const string& message);
     void recoverToNextStatementOrStop(TokenType stopToken);
     void failSyntax(const string& message);
-    //void reportSyntaxError(const string& message);
-    //void synchronize();
-    //void recoverAfterError();
-    //bool isExpressionBoundary();
-    //bool isExpressionStart();
-    //void recoverToNextStatementOrStop(Token stopToken);
-
-    //string expressionContextToMessage(ExpressionContext context);
-    //string currentLexForError();
-
-    //shared_ptr<ASTNode> makeErrorNode(const string& name, const string& message);
-
-    //shared_ptr<ASTNode> parseRequiredExpression(ExpressionContext context);
-    //void failSyntax(const string& message);
-
+    
 public:
     SyntacticAnalysis();
     SyntacticAnalysis(const Token* tokens);
-    //SyntacticAnalysis(const vector<Lexema>& tokens);
-
-    //SyntacticAnalysis(const vector<Lexema>& tokens, shared_ptr<ErrorReporter> errorReporter);
     SyntacticAnalysis(const Token* tokens, shared_ptr<ErrorReporter> errorReporter);
 
     // הפונקציה הראשית
@@ -52,13 +35,11 @@ public:
     void printASTNodes(const shared_ptr<ASTNode>& node);
 
 private:
-    // =====================================================
+    
     // פעולות עזר כלליות
-    // =====================================================
-
+    
     Token currentToken();
 
-    Token peekNextToken();
 
     void nextToken();
 
@@ -87,9 +68,10 @@ private:
 
     bool isCompOp();
 
-    // =====================================================
     // Separators
-    // =====================================================
+    //
+    //
+    //
 
     // Separator ::= Tok_newline | Tok_semicolon | Tok_comment
     shared_ptr<ASTNode> separator();
@@ -102,9 +84,11 @@ private:
 
     void skipSeparators();
 
-    // =====================================================
+    
     // Program
-    // =====================================================
+    //
+    //
+    //
 
     // Program ::= SeparatorsOpt StatementList Tok_count
     shared_ptr<ASTNode> program();
@@ -112,9 +96,14 @@ private:
     // StatementList ::= SeparatorsOpt [ Statement { Separators Statement } SeparatorsOpt ]
     shared_ptr<ASTNode> statementList(TokenType stopToken);
 
-    // =====================================================
+    
     // Statements
-    // =====================================================
+    //
+    //
+    //
+    //
+    //
+
 
     // Statement ::= Assignment
     //             | ReadStatement
@@ -159,9 +148,16 @@ private:
     // ExpressionList ::= Expression { Tok_comma Expression }
     shared_ptr<ASTNode> expressionList();
 
-    // =====================================================
+    
     // Expressions
-    // =====================================================
+    // 
+    //
+    //
+    //
+    //
+    //
+    //
+
     
     // Expression ::= OrExpression
     shared_ptr<ASTNode> expression();

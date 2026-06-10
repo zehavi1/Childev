@@ -145,16 +145,10 @@ copy "$(ProjectDir)compilerTxtData.txt" "$(OutDir)compilerTxtData.txt"</PostBuil
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="buildAutomat.cpp" />
-    <ClCompile Include="CompilationError.cpp" />
     <ClCompile Include="Compiler.cpp" />
     <ClCompile Include="enums.cpp" />
-    <ClCompile Include="ErrorHandler.cpp" />
-    <ClCompile Include="ErrorReporter.cpp" />
     <ClCompile Include="LexicalAnalysis.cpp" />
-    <ClCompile Include="LexicalAnalysis2.cpp" />
-    <ClCompile Include="LexicalAnalyzer.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="mainForClient.cpp" />
+    <ClCompile Include="mainChilDev.cpp" />
     <ClCompile Include="SyntaxAnalysis.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -162,9 +156,7 @@ copy "$(ProjectDir)compilerTxtData.txt" "$(OutDir)compilerTxtData.txt"</PostBuil
     <ClInclude Include="buildAutomat.h" />
     <ClInclude Include="CompilationError.h" />
     <ClInclude Include="enums.h" />
-    <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="ErrorReporter.h" />
-    <ClInclude Include="LexicalAnalyzer.h" />
     <ClInclude Include="Token.h" />
     <ClInclude Include="LexicalAnalysis.h" />
     <ClInclude Include="ParseException.h" />
@@ -173,7 +165,6 @@ copy "$(ProjectDir)compilerTxtData.txt" "$(OutDir)compilerTxtData.txt"</PostBuil
   <ItemGroup>
     <Text Include="accept_states_token.txt" />
     <Text Include="compilerTxtData.txt" />
-    <Text Include="compilerTxtData2.txt" />
     <Text Include="states.txt" />
     <Text Include="Token.txt" />
   </ItemGroup>

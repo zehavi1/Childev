@@ -17,7 +17,7 @@ SyntacticAnalysis::SyntacticAnalysis(
 	shared_ptr<ErrorReporter> errorReporter
 )
 	: tokens(tokens),
-	errorReporter(errorReporter),current(tokens)
+	errorReporter(errorReporter), current(tokens)
 {
 }
 
@@ -40,26 +40,10 @@ Token SyntacticAnalysis::currentToken()
 	//return tokens[currentTokenIndex];
 }
 
-Token SyntacticAnalysis::peekNextToken()
-{
-	//if (currentTokenIndex + 1 >= tokens.size())
-	if(current->nextlex==nullptr)
-	{
-		Token endToken;
-		endToken.typeToken = Tok_EOF;
-		endToken.lex = "";
-		endToken.nextlex = nullptr;
-		return endToken;
-	}
-
-	//return tokens[currentTokenIndex + 1];
-	return *(tokens->nextlex);
-}
-
 void SyntacticAnalysis::nextToken()
 {
 	//if (currentTokenIndex < tokens.size())
-	if(current->nextlex)
+	if (current->nextlex)
 	{
 		current = current->nextlex;
 	}
@@ -409,7 +393,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::assignment()
 	node->addChild(identifierList());
 	node->addChild(match(Tok_assign, "Expected '<-' in assignment"));
 	node->addChild(expression());
-	
+
 	return node;
 }
 
@@ -470,12 +454,12 @@ shared_ptr<ASTNode> SyntacticAnalysis::expressionList()
 	shared_ptr<ParentNode> node = make_shared<ParentNode>("expressionList");
 
 	node->addChild(expression());
-	
+
 	while (currentToken().typeToken == Tok_comma)
 	{
 		node->addChild(match(Tok_comma));
 		node->addChild(expression());
-		
+
 	}
 
 	return node;
@@ -491,7 +475,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::ifStatement()
 
 	node->addChild(match(Tok_if));
 	node->addChild(expression());
-	
+
 	node->addChild(block());
 	node->addChild(elsePartOpt());
 
@@ -523,7 +507,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::whileStatement()
 
 	node->addChild(match(Tok_while));
 	node->addChild(expression());
-	
+
 	node->addChild(block());
 
 	return node;
@@ -542,11 +526,11 @@ shared_ptr<ASTNode> SyntacticAnalysis::forStatement()
 		node->addChild(match(Tok_identifier, "Expected loop variable"));
 		node->addChild(match(Tok_assign, "Expected '<-' in for loop"));
 		node->addChild(expression());
-		
+
 
 		node->addChild(match(Tok_to, "Expected 'to' in for loop"));
 		node->addChild(expression());
-		
+
 
 
 		node->addChild(match(Tok_Right_paren, "Expected ')' after for header"));
@@ -556,11 +540,11 @@ shared_ptr<ASTNode> SyntacticAnalysis::forStatement()
 		node->addChild(match(Tok_identifier, "Expected loop variable"));
 		node->addChild(match(Tok_assign, "Expected '<-' in for loop"));
 		node->addChild(expression());
-		
+
 
 		node->addChild(match(Tok_to, "Expected 'to' in for loop"));
 		node->addChild(expression());
-		
+
 
 	}
 

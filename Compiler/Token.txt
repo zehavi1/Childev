@@ -22,7 +22,7 @@
 22 Tok_comma//,
 23 Tok_Colon//:
 24 Tok_coment//הערה
-25 Tok_semicolon   // ; אם כן כתבו
+25 Tok_newline   // ; אם כן כתבו
 26 Tok_error//
 27 Tok_EOF//
 28 Tok_count//

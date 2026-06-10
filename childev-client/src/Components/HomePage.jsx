@@ -120,10 +120,10 @@ function HomePage({ currentUser, onLogout }) {
         <div className="app-page">
             <header className="top-header">
                 <div className="welcome-area">
-                    <div className="welcome-icon">🌈</div>
+                    <div className="welcome-icon">🤩</div>
 
                     <div>
-                        <h1>שלום ל־{currentUser.displayName} 🌟</h1>
+                        <h1>שלום ל{currentUser.displayName} 🌟</h1>
                         <p>אפשר לכתוב קוד לבד, או להיעזר במקלדת הקוד.</p>
                     </div>
                 </div>
