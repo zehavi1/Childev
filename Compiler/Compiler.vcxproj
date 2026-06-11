@@ -145,7 +145,6 @@ copy "$(ProjectDir)compilerTxtData.txt" "$(OutDir)compilerTxtData.txt"</PostBuil
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="buildAutomat.cpp" />
-    <ClCompile Include="Compiler.cpp" />
     <ClCompile Include="enums.cpp" />
     <ClCompile Include="LexicalAnalysis.cpp" />
     <ClCompile Include="mainChilDev.cpp" />

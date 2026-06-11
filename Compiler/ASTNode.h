@@ -14,8 +14,6 @@ using namespace std;
 struct ASTNode {
 public:
     virtual void printASTNode(int depth = 0) = 0;
-    virtual string printOriginalCode(int tabs = 0) const = 0;
-    virtual void changeChild(shared_ptr<ASTNode> child, int index) = 0;
     virtual ~ASTNode() {}
 };
 
@@ -40,51 +38,7 @@ public:
         cout << "TokenNode: " << token.lex << endl;
     }
 
-    string printOriginalCode(int tabs = 0) const override {
-        string spaces(tabs, ' ');
-
-        switch (token.typeToken)
-        {
-        case Tok_newline:
-            return "\n" + spaces;
-
-        case Tok_semicolon:
-            return ";\n" + spaces;
-
-        case Tok_Colon:
-            return " :\n" + spaces;
-
-        case Tok_block_end:
-            return "\n" + spaces + "||\n" + spaces;
-
-        case Tok_if:
-        case Tok_else:
-        case Tok_for:
-        case Tok_while:
-        case Tok_read:
-        case Tok_write:
-        case Tok_to:
-        case Tok_true:
-        case Tok_false:
-            return token.lex + " ";
-
-        case Tok_comma:
-            return ", ";
-
-        case Tok_Left_paren:
-            return "(";
-
-        case Tok_Right_paren:
-            return ")";
-
-        default:
-            return token.lex;
-        }
-    }
-
-    void changeChild(shared_ptr<ASTNode> child, int index) override {
-        // אין ילדים ל־TokenNode
-    }
+   
 };
 
 // צומת אב כללי שמחזיק רשימת ילדים
@@ -111,33 +65,13 @@ public:
         }
     }
 
-    string printOriginalCode(int tabs = 0) const override {
-        string result = "";
-
-        int currentTabs = tabs;
-
-        if (name == "block")
-            currentTabs++;
-
-        for (const auto& child : children) {
-            if (child != nullptr)
-                result += child->printOriginalCode(currentTabs);
-        }
-
-        return result;
-    }
+    
 
     void addChild(shared_ptr<ASTNode> child) {
         children.push_back(child);
     }
 
-    void changeChild(shared_ptr<ASTNode> child, int index) override {
-        if (index < 0 || index >= children.size()) {
-            throw out_of_range("Index is out of range");
-        }
-
-        children[index] = child;
-    }
+  
 
     void insertChild(shared_ptr<ASTNode> child, size_t index) {
         if (index <= children.size()) {
@@ -185,28 +119,9 @@ public:
             right->printASTNode(depth + 2);
     }
 
-    string printOriginalCode(int tabs = 0) const override {
-        string result = "";
+   
 
-        if (left != nullptr)
-            result += left->printOriginalCode(tabs);
-
-        result += " " + op.lex + " ";
-
-        if (right != nullptr)
-            result += right->printOriginalCode(tabs);
-
-        return result;
-    }
-
-    void changeChild(shared_ptr<ASTNode> child, int index) override {
-        if (index == 0)
-            left = child;
-        else if (index == 1)
-            right = child;
-        else
-            throw out_of_range("BinaryOpNode has only 2 children");
-    }
+    
 };
 
 // צומת עבור ביטוי אונרי, למשל: -x
@@ -229,21 +144,10 @@ public:
             expr->printASTNode(depth + 1);
     }
 
-    string printOriginalCode(int tabs = 0) const override {
-        string result = op.lex;
+   
+    
 
-        if (expr != nullptr)
-            result += expr->printOriginalCode(tabs);
-
-        return result;
-    }
-
-    void changeChild(shared_ptr<ASTNode> child, int index) override {
-        if (index == 0)
-            expr = child;
-        else
-            throw out_of_range("UnaryOpNode has only 1 child");
-    }
+   
 };
 
 // צומת פשוט לטקסט כללי / הודעות / תוכן מיוחד
@@ -258,14 +162,5 @@ public:
     void printASTNode(int depth = 0) override {
         printTabsDepth(depth);
         cout << "SentenceNode: " << content << endl;
-    }
-
-    string printOriginalCode(int tabs = 0) const override {
-        string spaces(tabs, ' ');
-        return spaces + content;
-    }
-
-    void changeChild(shared_ptr<ASTNode> child, int index) override {
-        // אין ילדים
     }
 };

@@ -13,29 +13,22 @@ using namespace std;
 
 class SyntacticAnalysis
 {
-private:
-    const Token* tokens;   // רשימת הלקסמות
-    const Token* current;
-    size_t currentTokenIndex = 0;   // איפה אנחנו נמצאים כרגע
-    shared_ptr<ErrorReporter> errorReporter;
-    
-    void reportSyntaxError(const string& message);
-    void recoverToNextStatementOrStop(TokenType stopToken);
-    void failSyntax(const string& message);
-    
 public:
-    SyntacticAnalysis();
-    SyntacticAnalysis(const Token* tokens);
     SyntacticAnalysis(const Token* tokens, shared_ptr<ErrorReporter> errorReporter);
 
     // הפונקציה הראשית
     shared_ptr<ASTNode> parse();
 
-    ~SyntacticAnalysis();
     void printASTNodes(const shared_ptr<ASTNode>& node);
 
 private:
-    
+    const Token* tokens;   // רשימת הלקסמות
+    const Token* current;
+    shared_ptr<ErrorReporter> errorReporter;
+
+    void reportSyntaxError(const string& message);
+    void recoverToNextStatementOrStop(TokenType stopToken);
+    void failSyntax(const string& message);
     // פעולות עזר כלליות
     
     Token currentToken();
@@ -57,12 +50,6 @@ private:
 
     // התאמה לפי סוג טוקן
     shared_ptr<TokenNode> match(TokenType token, string msg = "Unexpected token");
-
-    // התאמה עבור Tok_math עם בדיקת lex
-    shared_ptr<TokenNode> matchMath(const string& op, string msg = "Unexpected math operator");
-
-    // התאמה עבור Tok_comp
-    shared_ptr<TokenNode> matchComp(string msg = "Unexpected comparison operator");
 
     bool isMathOp(const string& op);
 

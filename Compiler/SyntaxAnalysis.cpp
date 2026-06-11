@@ -3,15 +3,7 @@
 
 using namespace std;
 
-SyntacticAnalysis::SyntacticAnalysis()
-{
-}
 
-SyntacticAnalysis::SyntacticAnalysis(const Token* tokens)
-	: tokens(tokens)
-{
-	this->current = this->tokens;
-}
 SyntacticAnalysis::SyntacticAnalysis(
 	const Token* tokens,
 	shared_ptr<ErrorReporter> errorReporter
@@ -21,13 +13,10 @@ SyntacticAnalysis::SyntacticAnalysis(
 {
 }
 
-SyntacticAnalysis::~SyntacticAnalysis()
-{
-}
+
 
 Token SyntacticAnalysis::currentToken()
 {
-	//if (currentTokenIndex >= tokens.size())
 	if (current->nextlex == nullptr)
 	{
 		Token endToken;
@@ -37,12 +26,10 @@ Token SyntacticAnalysis::currentToken()
 		return endToken;
 	}
 	return *current;
-	//return tokens[currentTokenIndex];
 }
 
 void SyntacticAnalysis::nextToken()
 {
-	//if (currentTokenIndex < tokens.size())
 	if (current->nextlex)
 	{
 		current = current->nextlex;
@@ -51,7 +38,6 @@ void SyntacticAnalysis::nextToken()
 
 bool SyntacticAnalysis::isEnd()
 {
-	//return currentTokenIndex >= tokens.size()
 	return current->nextlex == nullptr
 		|| currentToken().typeToken == Tok_EOF;
 }
@@ -122,43 +108,6 @@ shared_ptr<TokenNode> SyntacticAnalysis::match(TokenType expected, string msg)
 	return make_shared<TokenNode>(t);
 }
 
-shared_ptr<TokenNode> SyntacticAnalysis::matchMath(const string& op, string msg)
-{
-	if (currentToken().typeToken != Tok_math || currentToken().lex != op)
-	{
-		string message = msg;
-		message += ". Expected '";
-		message += op;
-		message += "', got '";
-		message += currentToken().lex;
-		message += "'";
-
-		reportSyntaxError(message);
-
-		throw ParseException(message);
-	}
-
-	Token t = currentToken();
-	nextToken();
-
-	return make_shared<TokenNode>(t);
-}
-
-shared_ptr<TokenNode> SyntacticAnalysis::matchComp(string msg)
-{
-	if (currentToken().typeToken != Tok_comp)
-	{
-		string error = msg;
-		error += "\nGot: ";
-		error += currentToken().lex;
-		throw runtime_error(error);
-	}
-
-	Token t = currentToken();
-	nextToken();
-
-	return make_shared<TokenNode>(t);
-}
 
 void SyntacticAnalysis::skipSeparators()
 {
@@ -188,33 +137,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::program()
 	return node;
 }
 
-//shared_ptr<ASTNode> SyntacticAnalysis::statementList(Token stopToken)
-//{
-//    shared_ptr<ParentNode> node = make_shared<ParentNode>("statementList");
-//
-//    skipSeparators();
-//
-//    while (!isEnd() && currentToken().typeToken != stopToken)
-//    {
-//        if (!isStatementStart())
-//        {
-//            throw runtime_error("Expected statement");
-//        }
-//
-//        node->addChild(statement());
-//
-//        if (isSeparator())
-//        {
-//            skipSeparators();
-//        }
-//        else if (!isEnd() && currentToken().typeToken != stopToken)
-//        {
-//            throw runtime_error("Missing separator between statements");
-//        }
-//    }
-//
-//    return node;
-//}
+
 shared_ptr<ASTNode> SyntacticAnalysis::statementList(TokenType stopToken)
 {
 	auto node = make_shared<ParentNode>("statementList");
@@ -275,91 +198,7 @@ shared_ptr<ASTNode> SyntacticAnalysis::statementList(TokenType stopToken)
 
 	return node;
 }
-//shared_ptr<ASTNode> SyntacticAnalysis::statementList(Token stopToken)
-//{
-//
-//	size_t before = currentTokenIndex;
-//	shared_ptr<ParentNode> node = make_shared<ParentNode>("statementList");
-//
-//	skipSeparators();
-//
-//	while (!isEnd() && currentToken().typeToken != stopToken)
-//	{
-//		try
-//		{
-//			cout << "DEBUG statementList index = "
-//				<< currentTokenIndex
-//				<< " token = "
-//				<< currentToken().lex
-//				<< endl;
-//			if (currentToken().typeToken == Tok_error)
-//			{
-//				reportSyntaxError("Lexical error token found");
-//				nextToken();
-//				continue;
-//			}
-//			if (currentToken().typeToken == stopToken ||
-//				currentToken().typeToken == Tok_count)
-//			{
-//				break;
-//			}
-//			if (currentToken().typeToken == Tok_block_end)
-//			{
-//				if (stopToken == Tok_block_end)
-//				{
-//					break;
-//				}
-//
-//				string msg = "Unexpected '||' without matching block";
-//				reportSyntaxError(msg);
-//
-//				auto errorNode = make_shared<ParentNode>("errorStatement");
-//				errorNode->addChild(make_shared<SentenceNode>(msg));
-//				node->addChild(errorNode);
-//
-//				nextToken();        // חשוב! כדי לא להיתקע על אותו ||
-//				skipSeparators();
-//				continue;
-//			}
-//			if (!isStatementStart())
-//			{
-//				string message = "Expected statement, got '" + currentToken().lex + "'";
-//				reportSyntaxError(message);
-//				throw ParseException(message);
-//			}
-//
-//			node->addChild(statement());
-//
-//			if (isSeparator())
-//			{
-//				skipSeparators();
-//			}
-//			else if (!isEnd() && currentToken().typeToken != stopToken)
-//			{
-//				string message = "Missing separator between statements";
-//				reportSyntaxError(message);
-//				throw ParseException(message);
-//			}
-//		}
-//		catch (const ParseException& ex)
-//		{
-//			auto errorNode = make_shared<ParentNode>("error");
-//			errorNode->addChild(make_shared<SentenceNode>(ex.what()));
-//			node->addChild(errorNode);
-//
-//			recoverAfterError();
-//		}
-//	}
-//	//הגנה מחוסר התקדמות בגלל שגיאות
-//	if (currentTokenIndex == before)
-//	{
-//		if (!isEnd() && currentToken().typeToken != stopToken)
-//		{
-//			nextToken();
-//		}
-//	}
-//	return node;
-//}
+
 shared_ptr<ASTNode> SyntacticAnalysis::statement()
 {
 	switch (currentToken().typeToken)
@@ -486,18 +325,13 @@ shared_ptr<ASTNode> SyntacticAnalysis::elsePartOpt()
 {
 	shared_ptr<ParentNode> node = make_shared<ParentNode>("elsePartOpt");
 
-	size_t savedIndex = currentTokenIndex;
-
 	skipSeparators();
-
 	if (currentToken().typeToken == Tok_else)
 	{
 		node->addChild(match(Tok_else));
 		node->addChild(block());
 		return node;
 	}
-
-	currentTokenIndex = savedIndex;
 	return node;
 }
 
